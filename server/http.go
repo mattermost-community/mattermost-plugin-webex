@@ -7,13 +7,20 @@ import (
 	"crypto/subtle"
 	"encoding/json"
 	"fmt"
+	"github.com/mattermost/mattermost-plugin-webex/server/webex"
+	"io/ioutil"
 	"net/http"
 	"strings"
 
 	"github.com/gorilla/schema"
-	"github.com/mattermost/mattermost-plugin-zoom/server/zoom"
 	"github.com/mattermost/mattermost-server/model"
 	"github.com/mattermost/mattermost-server/plugin"
+)
+
+const (
+	routeAPImeetings      = "/api/v1/meetings"
+	routeWebhook          = "/webhook"
+	routeOauthRedirectURI = "/oauth"
 )
 
 func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Request) {
@@ -24,19 +31,33 @@ func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Req
 	}
 
 	switch path := r.URL.Path; path {
-	case "/webhook":
+	case routeWebhook:
 		p.handleWebhook(w, r)
-	case "/api/v1/meetings":
+	case routeAPImeetings:
 		p.handleStartMeeting(w, r)
+	case routeOauthRedirectURI:
+		p.handleOauthRedirectURI(w, r)
 	default:
 		http.NotFound(w, r)
 	}
 }
 
-func (p *Plugin) handleWebhook(w http.ResponseWriter, r *http.Request) {
-	config := p.getConfiguration()
+func (p *Plugin) handleOauthRedirectURI(w http.ResponseWriter, r *http.Request) {
+	p.Errorf("<><> request headers: %+v\n", r.Header)
+	b, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		p.Errorf("error reading body")
+	}
+	r.ParseForm()
+	p.Errorf("<><> form/query params: %+v", r.Form)
+	p.Errorf("<><> request body: %s\n", b)
+}
 
-	if subtle.ConstantTimeCompare([]byte(r.URL.Query().Get("secret")), []byte(config.WebhookSecret)) != 1 {
+func (p *Plugin) handleWebhook(w http.ResponseWriter, r *http.Request) {
+	//config := p.getConfiguration()
+	//secret := config.WebhookSecret
+	secret := ""
+	if subtle.ConstantTimeCompare([]byte(r.URL.Query().Get("secret")), []byte(secret)) != 1 {
 		http.Error(w, "Not authorized", http.StatusUnauthorized)
 		return
 	}
@@ -46,7 +67,7 @@ func (p *Plugin) handleWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var webhook zoom.Webhook
+	var webhook webex.Webhook
 	decoder := schema.NewDecoder()
 
 	// Try to decode to standard webhook
@@ -60,8 +81,8 @@ func (p *Plugin) handleWebhook(w http.ResponseWriter, r *http.Request) {
 	// TODO: handle recording webhook
 }
 
-func (p *Plugin) handleStandardWebhook(w http.ResponseWriter, r *http.Request, webhook *zoom.Webhook) {
-	if webhook.Status != zoom.WebhookStatusStarted {
+func (p *Plugin) handleStandardWebhook(w http.ResponseWriter, r *http.Request, webhook *webex.Webhook) {
+	if webhook.Status != webex.WebhookStatusStarted {
 		return
 	}
 
@@ -84,7 +105,7 @@ func (p *Plugin) handleStandardWebhook(w http.ResponseWriter, r *http.Request, w
 	}
 
 	post.Message = "Meeting has ended."
-	post.Props["meeting_status"] = zoom.WebhookStatusEnded
+	post.Props["meeting_status"] = webex.WebhookStatusEnded
 
 	if _, appErr := p.API.UpdatePost(post); appErr != nil {
 		http.Error(w, appErr.Error(), appErr.StatusCode)
@@ -109,7 +130,7 @@ type startMeetingRequest struct {
 }
 
 func (p *Plugin) handleStartMeeting(w http.ResponseWriter, r *http.Request) {
-	config := p.getConfiguration()
+	//config := p.getConfiguration()
 
 	userID := r.Header.Get("Mattermost-User-Id")
 	if userID == "" {
@@ -138,7 +159,7 @@ func (p *Plugin) handleStartMeeting(w http.ResponseWriter, r *http.Request) {
 	personal := req.Personal
 
 	if meetingID == 0 && req.Personal {
-		ru, clientErr := p.zoomClient.GetUser(user.Email)
+		ru, clientErr := p.webexClient.GetUser(user.Email)
 		if clientErr != nil {
 			http.Error(w, clientErr.Error(), clientErr.StatusCode)
 			return
@@ -149,12 +170,12 @@ func (p *Plugin) handleStartMeeting(w http.ResponseWriter, r *http.Request) {
 	if meetingID == 0 {
 		personal = false
 
-		meeting := &zoom.Meeting{
-			Type:  zoom.MeetingTypeInstant,
+		meeting := &webex.Meeting{
+			Type:  webex.MeetingTypeInstant,
 			Topic: req.Topic,
 		}
 
-		rm, clientErr := p.zoomClient.CreateMeeting(meeting, user.Email)
+		rm, clientErr := p.webexClient.CreateMeeting(meeting, user.Email)
 		if clientErr != nil {
 			http.Error(w, clientErr.Error(), clientErr.StatusCode)
 			return
@@ -162,7 +183,9 @@ func (p *Plugin) handleStartMeeting(w http.ResponseWriter, r *http.Request) {
 		meetingID = rm.ID
 	}
 
-	zoomURL := strings.TrimSpace(config.ZoomURL)
+	//url := config.ZoomURL
+	url := ""
+	zoomURL := strings.TrimSpace(url)
 	if len(zoomURL) == 0 {
 		zoomURL = "https://zoom.us"
 	}
@@ -177,7 +200,7 @@ func (p *Plugin) handleStartMeeting(w http.ResponseWriter, r *http.Request) {
 		Props: map[string]interface{}{
 			"meeting_id":       meetingID,
 			"meeting_link":     meetingURL,
-			"meeting_status":   zoom.WebhookStatusStarted,
+			"meeting_status":   webex.WebhookStatusStarted,
 			"meeting_personal": personal,
 			"meeting_topic":    req.Topic,
 		},

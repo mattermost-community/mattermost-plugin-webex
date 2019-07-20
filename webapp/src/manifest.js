@@ -1,2 +1,2 @@
-export const id = 'zoom';
-export const version = '1.0.7';
+export const id = 'com.mattermost.webex';
+export const version = '0.0.1';

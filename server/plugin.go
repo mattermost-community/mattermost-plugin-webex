@@ -4,11 +4,13 @@
 package main
 
 import (
+	"fmt"
+	"github.com/mattermost/mattermost-plugin-webex/server/webex"
 	"io/ioutil"
 	"path/filepath"
+	"strings"
 	"sync"
 
-	"github.com/mattermost/mattermost-plugin-zoom/server/zoom"
 	"github.com/mattermost/mattermost-server/model"
 	"github.com/mattermost/mattermost-server/plugin"
 	"github.com/pkg/errors"
@@ -17,15 +19,15 @@ import (
 const (
 	postMeetingKey = "post_meeting_"
 
-	botUserName    = "zoom"
-	botDisplayName = "Zoom"
-	botDescription = "Created by the Zoom plugin."
+	botUserName    = "webex"
+	botDisplayName = "Webex"
+	botDescription = "Created by the Webex plugin."
 )
 
 type Plugin struct {
 	plugin.MattermostPlugin
 
-	zoomClient *zoom.Client
+	webexClient *webex.Client
 
 	// botUserID of the created bot account.
 	botUserID string
@@ -69,7 +71,36 @@ func (p *Plugin) OnActivate() error {
 		return errors.Wrap(appErr, "couldn't set profile image")
 	}
 
-	p.zoomClient = zoom.NewClient(config.ZoomAPIURL, config.APIKey, config.APISecret)
+	//p.webexClient = webex.NewClient(config.ClientID, config.ClientSecret)
+
+	err = p.API.RegisterCommand(getCommand())
+	if err != nil {
+		return errors.WithMessage(err, "OnActivate: failed to register command")
+	}
 
 	return nil
+}
+
+func (p *Plugin) GetPluginURLPath() string {
+	return "/plugins/" + manifest.Id
+}
+
+func (p *Plugin) GetPluginURL() string {
+	return strings.TrimRight(p.GetSiteURL(), "/") + p.GetPluginURLPath()
+}
+
+func (p *Plugin) GetSiteURL() string {
+	return *p.API.GetConfig().ServiceSettings.SiteURL
+}
+
+func (p *Plugin) Debugf(f string, args ...interface{}) {
+	p.API.LogDebug(fmt.Sprintf(f, args...))
+}
+
+func (p *Plugin) Infof(f string, args ...interface{}) {
+	p.API.LogInfo(fmt.Sprintf(f, args...))
+}
+
+func (p *Plugin) Errorf(f string, args ...interface{}) {
+	p.API.LogError(fmt.Sprintf(f, args...))
 }

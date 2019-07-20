@@ -9,10 +9,10 @@ import {makeStyleFromTheme} from 'mattermost-redux/utils/theme_utils';
 import {Svgs} from '../../constants';
 import {formatDate} from '../../utils/date_utils';
 
-export default class PostTypeZoom extends React.PureComponent {
+export default class PostTypeWebex extends React.PureComponent {
     static propTypes = {
 
-        /*
+        /**
          * The post to render the message for.
          */
         post: PropTypes.object.isRequired,
@@ -32,12 +32,12 @@ export default class PostTypeZoom extends React.PureComponent {
          */
         useMilitaryTime: PropTypes.bool,
 
-        /*
+        /**
          * Logged in user's theme.
          */
         theme: PropTypes.object.isRequired,
 
-        /*
+        /**
          * Creator's name.
          */
         creatorName: PropTypes.string.isRequired,
@@ -52,8 +52,7 @@ export default class PostTypeZoom extends React.PureComponent {
     constructor(props) {
         super(props);
 
-        this.state = {
-        };
+        this.state = {};
     }
 
     render() {

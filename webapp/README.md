@@ -2,6 +2,15 @@
 
 Add README information for the webapp portion of your plugin here.
 
+## Install
+1. Follow the instructions to add Mattermost as an integration: https://developer.cisco.com/docs/webex-meetings/#!integration/what-are-integrations
+1. First, log into Cisco Devnet (the instruction site in step 1). 
+1. Go to: https://developer.cisco.com/site/webex-integration and register Mattermost as an integration.
+1. For the `Redirect URI` enter `https://<mattermost_url>/plugins/com.mattermost.webex/oauth` where `<mattermost_url>` is the hostname for your Mattermost server.
+1. For `Scope`, select `read_all` and `modify_meetings`.
+1. In the description put anything to help you remember this integration. Eg, `This is the integration to allow Mattermost users to start Webex meetings within Mattermost.` 
+1. Copy the ClientID and ClientSecret and enter them into those fields in the Webex plugin's system console settings.
+
 ## Template
 
 Everything you need to build the webapp portion of your plugin is present in this directory.

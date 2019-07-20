@@ -8,7 +8,7 @@ import {getBool} from 'mattermost-redux/selectors/entities/preferences';
 
 import {displayUsernameForUser} from '../../utils/user_utils';
 
-import PostTypeZoom from './post_type_zoom.jsx';
+import PostTypeWebex from './post_type_webex.jsx';
 
 function mapStateToProps(state, ownProps) {
     const post = ownProps.post || {};
@@ -28,4 +28,4 @@ function mapDispatchToProps(dispatch) {
     };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(PostTypeZoom);
+export default connect(mapStateToProps, mapDispatchToProps)(PostTypeWebex);

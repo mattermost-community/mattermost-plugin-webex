@@ -21,11 +21,8 @@ import (
 // If you add non-reference types to your configuration struct, be sure to rewrite Clone as a deep
 // copy appropriate for your types.
 type configuration struct {
-	ZoomURL       string
-	ZoomAPIURL    string
-	APIKey        string
-	APISecret     string
-	WebhookSecret string
+	ClientID     string
+	ClientSecret string
 }
 
 // Clone shallow copies the configuration. Your implementation may require a deep copy if
@@ -37,16 +34,12 @@ func (c *configuration) Clone() *configuration {
 
 // IsValid checks if all needed fields are set.
 func (c *configuration) IsValid() error {
-	if len(c.APIKey) == 0 {
-		return errors.New("APIKey is not configured")
+	if len(c.ClientID) == 0 {
+		return errors.New("ClientID is not configured")
 	}
 
-	if len(c.APISecret) == 0 {
-		return errors.New("APISecret is not configured")
-	}
-
-	if len(c.WebhookSecret) == 0 {
-		return errors.New("WebhookSecret is not configured")
+	if len(c.ClientSecret) == 0 {
+		return errors.New("ClientSecret is not configured")
 	}
 
 	return nil
@@ -101,6 +94,8 @@ func (p *Plugin) OnConfigurationChange() error {
 	if err := p.API.LoadPluginConfiguration(configuration); err != nil {
 		return errors.Wrap(err, "failed to load plugin configuration")
 	}
+
+	// TODO: trim clientID and clientSecret and re-save
 
 	p.setConfiguration(configuration)
 

@@ -6,13 +6,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/mattermost/mattermost-plugin-webex/server/webex"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
 	"strings"
 	"testing"
 
-	"github.com/mattermost/mattermost-plugin-zoom/server/zoom"
 	"github.com/mattermost/mattermost-server/model"
 	"github.com/mattermost/mattermost-server/plugin"
 	"github.com/mattermost/mattermost-server/plugin/plugintest"
@@ -25,7 +25,7 @@ func TestPlugin(t *testing.T) {
 	// Mock zoom server
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/users/theuseremail" {
-			user := &zoom.User{
+			user := &webex.User{
 				ID:  "thezoomuserid",
 				Pmi: 123,
 			}
@@ -36,7 +36,7 @@ func TestPlugin(t *testing.T) {
 				require.NoError(t, err)
 			}
 		} else if r.URL.Path == "/users/theuseremail/meetings/" {
-			meeting := &zoom.Meeting{
+			meeting := &webex.Meeting{
 				ID: 234,
 			}
 
@@ -126,8 +126,8 @@ func TestPlugin(t *testing.T) {
 			p := Plugin{}
 			p.setConfiguration(&configuration{
 				ZoomAPIURL:    ts.URL,
-				APIKey:        "theapikey",
-				APISecret:     "theapisecret",
+				ClientID:      "theapikey",
+				ClientSecret:  "theapisecret",
 				WebhookSecret: "thewebhooksecret",
 			})
 			p.SetAPI(api)

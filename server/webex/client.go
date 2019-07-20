@@ -1,7 +1,7 @@
 // Copyright (c) 2017-present Mattermost, Inc. All Rights Reserved.
 // See License for license information.
 
-package zoom
+package webex
 
 import (
 	"bytes"
@@ -10,15 +10,13 @@ import (
 	"net/http"
 	"net/url"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/mattermost/mattermost-server/model"
 	"github.com/pkg/errors"
 )
 
 const (
-	zoomAPIKey     = "api.zoom.us"
-	zoomAPIVersion = "v2"
-	jwlAlgorithm   = "HS256"
+	jwlAlgorithm = "HS256"
 )
 
 type ClientError struct {
@@ -32,34 +30,32 @@ func (ce *ClientError) Error() string {
 
 // Client represents a Zoom API client
 type Client struct {
-	apiKey     string
-	apiSecret  string
-	httpClient *http.Client
-	baseURL    string
+	clientID     string
+	clientSecret string
+	httpClient   *http.Client
+	baseURL      string
 }
 
 // NewClient returns a new Zoom API client. An empty url will default to https://api.zoom.us/v2.
-func NewClient(zoomURL, apiKey, apiSecret string) *Client {
-	if zoomURL == "" {
-		zoomURL = (&url.URL{
-			Scheme: "https",
-			Host:   zoomAPIKey,
-			Path:   "/" + zoomAPIVersion,
-		}).String()
-	}
+func NewClient(clientID, clientSecret string) *Client {
+	webexURL := (&url.URL{
+		Scheme: "https",
+		Host:   "",  //webexOauthHost,
+		Path:   "/", // + webexOauthPath,
+	}).String()
 
 	return &Client{
-		apiKey:     apiKey,
-		apiSecret:  apiSecret,
-		httpClient: &http.Client{},
-		baseURL:    zoomURL,
+		clientID:     clientID,
+		clientSecret: clientSecret,
+		httpClient:   &http.Client{},
+		baseURL:      webexURL,
 	}
 }
 
 func (c *Client) generateJWT() (string, error) {
 	claims := jwt.MapClaims{}
 
-	claims["iss"] = c.apiKey
+	claims["iss"] = c.clientID
 	claims["exp"] = model.GetMillis() + (10 * 1000) // expire after 10s
 
 	alg := jwt.GetSigningMethod(jwlAlgorithm)
@@ -69,7 +65,7 @@ func (c *Client) generateJWT() (string, error) {
 
 	token := jwt.NewWithClaims(alg, claims)
 
-	out, err := token.SignedString([]byte(c.apiSecret))
+	out, err := token.SignedString([]byte(c.clientSecret))
 	if err != nil {
 		return "", err
 	}

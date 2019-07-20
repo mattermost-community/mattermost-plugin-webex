@@ -4,6 +4,6 @@ var manifest = struct {
 	Id      string
 	Version string
 }{
-	Id:      "zoom",
-	Version: "1.0.7",
+	Id:      "com.mattermost.webex",
+	Version: "0.0.1",
 }
