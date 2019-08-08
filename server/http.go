@@ -11,15 +11,15 @@ import (
 )
 
 const (
-	routeAPImeetings      = "/api/v1/meetings"
-	routeWebhook          = "/webhook"
-	routeOauthRedirectURI = "/oauth"
+	routeAPImeetings = "/api/v1/meetings"
 )
 
 func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Request) {
 	status, err := handleHTTPRequest(p, w, r)
 	if err != nil {
-		p.API.LogError("ERROR: ", "Status", strconv.Itoa(status), "Error", err.Error(), "Host", r.Host, "RequestURI", r.RequestURI, "Method", r.Method, "query", r.URL.Query().Encode())
+		p.API.LogError("ERROR: ", "Status", strconv.Itoa(status),
+			"Error", err.Error(), "Host", r.Host, "RequestURI", r.RequestURI,
+			"Method", r.Method, "query", r.URL.Query().Encode())
 		http.Error(w, err.Error(), status)
 		return
 	}
@@ -31,7 +31,8 @@ func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Req
 	default:
 		w.WriteHeader(status)
 	}
-	p.API.LogDebug("OK: ", "Status", strconv.Itoa(status), "Host", r.Host, "RequestURI", r.RequestURI, "Method", r.Method, "query", r.URL.Query().Encode())
+	p.API.LogDebug("OK: ", "Status", strconv.Itoa(status), "Host", r.Host,
+		"RequestURI", r.RequestURI, "Method", r.Method, "query", r.URL.Query().Encode())
 }
 
 func handleHTTPRequest(p *Plugin, w http.ResponseWriter, r *http.Request) (int, error) {
@@ -40,26 +41,9 @@ func handleHTTPRequest(p *Plugin, w http.ResponseWriter, r *http.Request) (int, 
 	//	return p.handleWebhook(w, r)
 	//case routeAPImeetings:
 	//	return p.handleStartMeeting(w, r)
-	case routeOauthRedirectURI:
-		return p.handleOauthRedirectURI(w, r)
 	}
 
 	return http.StatusNotFound, errors.New("not found")
-}
-
-func (p *Plugin) handleOauthRedirectURI(w http.ResponseWriter, r *http.Request) (int, error) {
-	mattermostUserId := r.Header.Get("Mattermost-User-ID")
-	if mattermostUserId == "" {
-		return http.StatusUnauthorized, errors.New(
-			`Mattermost failed to recognize your user account. ` +
-				`Please make sure third-party cookies are not disabled in your browser settings.`)
-	}
-
-	code := r.FormValue("code")
-	state := r.FormValue("state")
-	p.errorf("<><> code: %s, state: %s, id: %v", code, state, mattermostUserId)
-
-	return http.StatusOK, nil
 }
 
 //func (p *Plugin) handleWebhook(w http.ResponseWriter, r *http.Request) {

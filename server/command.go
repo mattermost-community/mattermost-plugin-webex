@@ -1,22 +1,14 @@
 package main
 
 import (
-	"crypto/rand"
 	"fmt"
 	"github.com/mattermost/mattermost-server/model"
 	"github.com/mattermost/mattermost-server/plugin"
-	"net/http"
-	"net/url"
 	"strings"
 )
 
-const (
-	webexOauthHost = "api.webex.com"
-	webexOauthPath = "v1/oauth2/authorize"
-)
-
 const helpText = "###### Mattermost Webex Plugin - Slash Command Help\n" +
-	"* `/webex connect` - Connect to your webex account\n"
+	"* `/webex help` - This help text\n"
 
 type CommandHandlerFunc func(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse
 
@@ -27,8 +19,7 @@ type CommandHandler struct {
 
 var jiraCommandHandler = CommandHandler{
 	handlers: map[string]CommandHandlerFunc{
-		"connect": executeConnect,
-		"uri":     redirectURI,
+		"help": commandHelp,
 	},
 	defaultHandler: commandHelp,
 }
@@ -60,64 +51,13 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, commandArgs *model.CommandArg
 	return jiraCommandHandler.Handle(p, c, commandArgs, args[1:]...), nil
 }
 
-func executeConnect(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
-	if len(args) != 0 {
-		return p.help(header)
-	}
-
-	webexOauthURL := (&url.URL{
-		Scheme: "https",
-		Host:   webexOauthHost,
-		Path:   "/" + webexOauthPath,
-	}).String()
-
-	req, err := http.NewRequest("GET", webexOauthURL, nil)
-	if err != nil {
-		p.errorf("Error building Oauth2 request, err: %v", err)
-		return p.responsef(header, "Error connecting to Webex, please contact your system administrator.")
-	}
-
-	mattermostId := header.UserId
-	randomBytes := make([]byte, 16)
-	_, err = rand.Read(randomBytes)
-	if err != nil {
-		p.errorf("Error reading random bytes, err: %v", err)
-		return p.responsef(header, "Error connecting to Webex, please contact your system administrator.")
-	}
-
-	state := fmt.Sprintf("%x", randomBytes)
-	err = p.otsStore.StoreTemporaryState(mattermostId, state)
-	if err != nil {
-		p.errorf("Error storing temporary state, err: %v", err)
-		return p.responsef(header, "Error connecting to Webex, please contact your system administrator.")
-	}
-
-	q := req.URL.Query()
-	q.Add("response_type", "code")
-	q.Add("client_id", p.getConfiguration().ClientID)
-	q.Add("redirect_uri", p.GetPluginURL()+"/oauth")
-	q.Add("scope", "all_read meeting_modify")
-	q.Add("state", state)
-	q.Add("code_challenge", "codechall")
-	q.Add("code_challenge_method", "plain")
-
-	req.URL.RawQuery = q.Encode()
-
-	p.errorf("<><> redirect url: %s", req.URL.String())
-	return p.responseRedirect(req.URL.String())
-}
-
-func redirectURI(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
-	return p.responsef(header, "redirectURI is: %s", p.GetPluginURL()+"/oauth")
-}
-
 func getCommand() *model.Command {
 	return &model.Command{
 		Trigger:          "webex",
 		DisplayName:      "Webex",
 		Description:      "Integration with Webex.",
 		AutoComplete:     true,
-		AutoCompleteDesc: "Available commands: connect, help",
+		AutoCompleteDesc: "Available commands: help",
 		AutoCompleteHint: "[command]",
 	}
 }

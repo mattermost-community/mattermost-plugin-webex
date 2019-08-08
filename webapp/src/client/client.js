@@ -12,7 +12,7 @@ export default class Client {
 
     startMeeting = async (channelId, personal = true, topic = '', meetingId = 0) => {
         return this.doPost(`${this.url}/api/v1/meetings`, {channel_id: channelId, personal, topic, meeting_id: meetingId});
-    }
+    };
 
     doPost = async (url, body, headers = {}) => {
         headers['X-Requested-With'] = 'XMLHttpRequest';

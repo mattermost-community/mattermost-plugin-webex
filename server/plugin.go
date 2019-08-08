@@ -38,8 +38,6 @@ type Plugin struct {
 	// configuration is the active plugin configuration. Consult getConfiguration and
 	// setConfiguration for usage.
 	configuration *configuration
-
-	otsStore OTSStore
 }
 
 // OnActivate checks if the configurations is valid and ensures the bot account exists
