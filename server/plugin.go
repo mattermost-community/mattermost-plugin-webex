@@ -38,6 +38,8 @@ type Plugin struct {
 	// configuration is the active plugin configuration. Consult getConfiguration and
 	// setConfiguration for usage.
 	configuration *configuration
+
+	otsStore OTSStore
 }
 
 // OnActivate checks if the configurations is valid and ensures the bot account exists
@@ -93,14 +95,14 @@ func (p *Plugin) GetSiteURL() string {
 	return *p.API.GetConfig().ServiceSettings.SiteURL
 }
 
-func (p *Plugin) Debugf(f string, args ...interface{}) {
+func (p *Plugin) debugf(f string, args ...interface{}) {
 	p.API.LogDebug(fmt.Sprintf(f, args...))
 }
 
-func (p *Plugin) Infof(f string, args ...interface{}) {
+func (p *Plugin) infof(f string, args ...interface{}) {
 	p.API.LogInfo(fmt.Sprintf(f, args...))
 }
 
-func (p *Plugin) Errorf(f string, args ...interface{}) {
+func (p *Plugin) errorf(f string, args ...interface{}) {
 	p.API.LogError(fmt.Sprintf(f, args...))
 }

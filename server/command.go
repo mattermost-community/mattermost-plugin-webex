@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/rand"
 	"fmt"
 	"github.com/mattermost/mattermost-server/model"
 	"github.com/mattermost/mattermost-server/plugin"
@@ -72,7 +73,23 @@ func executeConnect(p *Plugin, c *plugin.Context, header *model.CommandArgs, arg
 
 	req, err := http.NewRequest("GET", webexOauthURL, nil)
 	if err != nil {
-		p.Errorf("Error building Oauth2 request, err: %v", err)
+		p.errorf("Error building Oauth2 request, err: %v", err)
+		return p.responsef(header, "Error connecting to Webex, please contact your system administrator.")
+	}
+
+	mattermostId := header.UserId
+	randomBytes := make([]byte, 16)
+	_, err = rand.Read(randomBytes)
+	if err != nil {
+		p.errorf("Error reading random bytes, err: %v", err)
+		return p.responsef(header, "Error connecting to Webex, please contact your system administrator.")
+	}
+
+	state := fmt.Sprintf("%x", randomBytes)
+	err = p.otsStore.StoreTemporaryState(mattermostId, state)
+	if err != nil {
+		p.errorf("Error storing temporary state, err: %v", err)
+		return p.responsef(header, "Error connecting to Webex, please contact your system administrator.")
 	}
 
 	q := req.URL.Query()
@@ -80,13 +97,13 @@ func executeConnect(p *Plugin, c *plugin.Context, header *model.CommandArgs, arg
 	q.Add("client_id", p.getConfiguration().ClientID)
 	q.Add("redirect_uri", p.GetPluginURL()+"/oauth")
 	q.Add("scope", "all_read meeting_modify")
-	q.Add("state", "this is the unique string<><>STONST//")
+	q.Add("state", state)
 	q.Add("code_challenge", "codechall")
 	q.Add("code_challenge_method", "plain")
 
 	req.URL.RawQuery = q.Encode()
 
-	p.Errorf("<><> redirect url: %s", req.URL.String())
+	p.errorf("<><> redirect url: %s", req.URL.String())
 	return p.responseRedirect(req.URL.String())
 }
 
