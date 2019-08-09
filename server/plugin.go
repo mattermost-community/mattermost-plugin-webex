@@ -5,7 +5,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/mattermost/mattermost-plugin-webex/server/webex"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
@@ -27,8 +26,6 @@ const (
 type Plugin struct {
 	plugin.MattermostPlugin
 
-	webexClient *webex.Client
-
 	// botUserID of the created bot account.
 	botUserID string
 
@@ -38,6 +35,9 @@ type Plugin struct {
 	// configuration is the active plugin configuration. Consult getConfiguration and
 	// setConfiguration for usage.
 	configuration *configuration
+
+	// KV store
+	store Store
 }
 
 // OnActivate checks if the configurations is valid and ensures the bot account exists
@@ -71,7 +71,7 @@ func (p *Plugin) OnActivate() error {
 		return errors.Wrap(appErr, "couldn't set profile image")
 	}
 
-	//p.webexClient = webex.NewClient(config.ClientID, config.ClientSecret)
+	p.store = NewStore(p)
 
 	err = p.API.RegisterCommand(getCommand())
 	if err != nil {

@@ -4,7 +4,9 @@
 package main
 
 import (
+	"encoding/json"
 	"reflect"
+	"regexp"
 
 	"github.com/pkg/errors"
 )
@@ -21,7 +23,7 @@ import (
 // If you add non-reference types to your configuration struct, be sure to rewrite Clone as a deep
 // copy appropriate for your types.
 type configuration struct {
-	SiteURL string
+	SiteHost string `json:"sitehost"`
 }
 
 // Clone shallow copies the configuration. Your implementation may require a deep copy if
@@ -33,9 +35,11 @@ func (c *configuration) Clone() *configuration {
 
 // IsValid checks if all needed fields are set.
 func (c *configuration) IsValid() error {
-	if len(c.SiteURL) == 0 {
-		return errors.New("SiteURL is not configured")
-	}
+	// Not using this because we want to give the site admin the chance
+	// to set the siteurl with the slash command:
+	//if len(c.SiteHost) == 0 {
+	//	return errors.New("SiteHost is not configured")
+	//}
 
 	return nil
 }
@@ -90,7 +94,19 @@ func (p *Plugin) OnConfigurationChange() error {
 		return errors.Wrap(err, "failed to load plugin configuration")
 	}
 
-	p.setConfiguration(configuration)
+	r := regexp.MustCompile("^https?://(.*?)/")
+	matches := r.FindStringSubmatch(configuration.SiteHost)
+	if matches != nil {
+		configuration.SiteHost = matches[1]
+
+		asMap := map[string]interface{}{}
+		asJson, _ := json.Marshal(configuration)
+		_ = json.Unmarshal(asJson, &asMap)
+		_ = p.API.SavePluginConfig(asMap)
+		p.setConfiguration(configuration)
+	} else {
+		p.setConfiguration(configuration)
+	}
 
 	return nil
 }

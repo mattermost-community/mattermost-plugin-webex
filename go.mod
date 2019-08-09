@@ -9,7 +9,6 @@ require (
 	github.com/hashicorp/go-hclog v0.9.2 // indirect
 	github.com/hashicorp/go-plugin v1.0.1 // indirect
 	github.com/lib/pq v1.1.1 // indirect
-	github.com/mattermost/mattermost-plugin-zoom v1.0.7
 	github.com/mattermost/mattermost-server v5.12.0+incompatible
 	github.com/pkg/errors v0.8.1
 	github.com/stretchr/objx v0.2.0 // indirect
