@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"regexp"
 )
 
@@ -40,7 +39,7 @@ func (p *Plugin) getRoomOrDefault(mattermostUserId string) (string, error) {
 	} else if err != nil {
 		// unexpected error
 		p.errorf("error from the store when retrieving room for mattermostUserId: %s, err: %v", mattermostUserId, err)
-		return "", errors.New(fmt.Sprintf("error getting your room from the store, please contact your system administrator. Err: %v", err))
+		return "", errors.New("error getting your room from the store, please contact your system administrator")
 	}
 
 	return userInfo.RoomID, nil
