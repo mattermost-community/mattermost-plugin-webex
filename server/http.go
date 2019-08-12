@@ -55,7 +55,10 @@ type startMeetingRequest struct {
 }
 
 func (p *Plugin) handleStartMeeting(w http.ResponseWriter, r *http.Request) (int, error) {
-	//config := p.getConfiguration()
+	if r.Method != http.MethodPost {
+		return http.StatusMethodNotAllowed,
+			errors.New("method " + r.Method + " is not allowed, must be POST")
+	}
 
 	userId := r.Header.Get("Mattermost-User-Id")
 	if userId == "" {
@@ -67,6 +70,10 @@ func (p *Plugin) handleStartMeeting(w http.ResponseWriter, r *http.Request) (int
 		return http.StatusBadRequest, fmt.Errorf("err: %v", err)
 	}
 
+	if req.ChannelID == "" {
+		return http.StatusBadRequest, errors.New("channel id required")
+	}
+
 	if _, appErr := p.API.GetChannelMember(req.ChannelID, userId); appErr != nil {
 		return http.StatusForbidden, errors.New("forbidden")
 	}
@@ -76,20 +83,20 @@ func (p *Plugin) handleStartMeeting(w http.ResponseWriter, r *http.Request) (int
 		return http.StatusInternalServerError, err
 	}
 
-	siteURL := p.getConfiguration().SiteHost
-	if siteURL == "" {
+	siteHost := p.getConfiguration().SiteHost
+	if siteHost == "" {
 		return http.StatusInternalServerError, errors.New("Unable to setup a meeting; the Webex plugin has not been configured yet.\nPlease ask your system administrator to set the `Webex Site Hostname` in `System Console -> PLUGINS -> Webex`.")
 	}
 
 	webexJoinURL := (&url.URL{
 		Scheme: "https",
-		Host:   siteURL,
+		Host:   siteHost,
 		Path:   "/join/" + roomId,
 	}).String()
 
 	webexStartURL := (&url.URL{
 		Scheme: "https",
-		Host:   siteURL,
+		Host:   siteHost,
 		Path:   "/start/" + roomId,
 	}).String()
 

@@ -19,7 +19,7 @@ type CommandHandler struct {
 	defaultHandler CommandHandlerFunc
 }
 
-var jiraCommandHandler = CommandHandler{
+var webexCommandHandler = CommandHandler{
 	handlers: map[string]CommandHandlerFunc{
 		"help": commandHelp,
 		"info": executeInfo,
@@ -56,7 +56,7 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, commandArgs *model.CommandArg
 	if len(args) == 0 || args[0] != "/webex" {
 		return p.help(commandArgs), nil
 	}
-	return jiraCommandHandler.Handle(p, c, commandArgs, args[1:]...), nil
+	return webexCommandHandler.Handle(p, c, commandArgs, args[1:]...), nil
 }
 
 func getCommand() *model.Command {

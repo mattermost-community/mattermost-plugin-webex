@@ -35,12 +35,6 @@ func (c *configuration) Clone() *configuration {
 
 // IsValid checks if all needed fields are set.
 func (c *configuration) IsValid() error {
-	// Not using this because we want to give the site admin the chance
-	// to set the siteurl with the slash command:
-	//if len(c.SiteHost) == 0 {
-	//	return errors.New("SiteHost is not configured")
-	//}
-
 	return nil
 }
 
@@ -94,19 +88,26 @@ func (p *Plugin) OnConfigurationChange() error {
 		return errors.Wrap(err, "failed to load plugin configuration")
 	}
 
-	r := regexp.MustCompile("^https?://(.*?)/")
-	matches := r.FindStringSubmatch(configuration.SiteHost)
-	if matches != nil {
-		configuration.SiteHost = matches[1]
+	host := parseHostFromUrl(configuration.SiteHost)
+	if host != configuration.SiteHost {
+		configuration.SiteHost = host
 
 		asMap := map[string]interface{}{}
 		asJson, _ := json.Marshal(configuration)
 		_ = json.Unmarshal(asJson, &asMap)
 		_ = p.API.SavePluginConfig(asMap)
-		p.setConfiguration(configuration)
-	} else {
-		p.setConfiguration(configuration)
 	}
 
+	p.setConfiguration(configuration)
+
 	return nil
+}
+
+func parseHostFromUrl(url string) string {
+	r := regexp.MustCompile("^https?://(.*?)/")
+	matches := r.FindStringSubmatch(url)
+	if matches != nil {
+		return matches[1]
+	}
+	return url
 }
