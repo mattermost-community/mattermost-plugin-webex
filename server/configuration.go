@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"reflect"
 	"regexp"
+	"strings"
 
 	"github.com/pkg/errors"
 )
@@ -109,5 +110,5 @@ func parseHostFromUrl(url string) string {
 	if matches != nil {
 		return matches[1]
 	}
-	return url
+	return strings.TrimSpace(url)
 }
