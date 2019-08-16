@@ -32,6 +32,10 @@ func TestPlugin(t *testing.T) {
 		strings.NewReader("{\"channel_id\": \"thechannelid\"}"))
 	validMeetingRequest2.Header.Add("Mattermost-User-Id", "theuserid")
 
+	validMeetingRequest3 := httptest.NewRequest("POST", "/api/v1/meetings",
+		strings.NewReader("{\"channel_id\": \"thechannelid\"}"))
+	validMeetingRequest3.Header.Add("Mattermost-User-Id", "theuserid")
+
 	invalidMeetingRequestGet := httptest.NewRequest("GET", "/api/v1/meetings",
 		strings.NewReader("{\"channel_id\": \"thechannelid\"}"))
 	invalidMeetingRequestGet.Header.Add("Mattermost-User-Id", "theuserid")
@@ -62,6 +66,12 @@ func TestPlugin(t *testing.T) {
 			Name:               "No SiteHost set",
 			Request:            validMeetingRequest2,
 			SiteHost:           "",
+			ExpectedStatusCode: http.StatusInternalServerError,
+		},
+		{
+			Name:               "Invalid SiteHost set",
+			Request:            validMeetingRequest3,
+			SiteHost:           "blah.blah.webex.co",
 			ExpectedStatusCode: http.StatusInternalServerError,
 		},
 		{
@@ -128,6 +138,7 @@ func TestPlugin(t *testing.T) {
 			p := Plugin{}
 			p.setConfiguration(&configuration{
 				SiteHost: tc.SiteHost,
+				siteName: parseSiteNameFromSiteHost(tc.SiteHost),
 			})
 			p.SetAPI(api)
 

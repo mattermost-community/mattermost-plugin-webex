@@ -21,9 +21,10 @@ type CommandHandler struct {
 
 var webexCommandHandler = CommandHandler{
 	handlers: map[string]CommandHandlerFunc{
-		"help": commandHelp,
-		"info": executeInfo,
-		"room": executeRoom,
+		"help":    commandHelp,
+		"info":    executeInfo,
+		"room":    executeRoom,
+		"reqRoom": executeReqRoomId,
 	},
 	defaultHandler: commandHelp,
 }
@@ -117,4 +118,17 @@ func executeInfo(p *Plugin, c *plugin.Context, header *model.CommandArgs, args .
 	}
 
 	return p.responsef(header, "Webex site hostname: %s\nYour personal meeting room: %s", p.getConfiguration().SiteHost, roomId)
+}
+
+func executeReqRoomId(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
+	roomId, err := p.getRoomOrDefault(header.UserId)
+	if err != nil {
+		return p.responsef(header, err.Error())
+	}
+
+	roomUrl, cerr := p.webexClient.GetPersonalMeetingRoomUrl(roomId, "", "")
+	if cerr != nil {
+		return p.responsef(header, "error: %+v", cerr)
+	}
+	return p.responsef(header, "The url is: %s", roomUrl)
 }

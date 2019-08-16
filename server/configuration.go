@@ -5,6 +5,7 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/mattermost/mattermost-plugin-webex/server/webex"
 	"reflect"
 	"regexp"
 	"strings"
@@ -25,6 +26,10 @@ import (
 // copy appropriate for your types.
 type configuration struct {
 	SiteHost string `json:"sitehost"`
+
+	// siteName is the SiteHost up to .webex.com
+	// Eg., for testsite.my.webex.com, siteName would be: testsite.my
+	siteName string
 }
 
 // Clone shallow copies the configuration. Your implementation may require a deep copy if
@@ -99,7 +104,11 @@ func (p *Plugin) OnConfigurationChange() error {
 		_ = p.API.SavePluginConfig(asMap)
 	}
 
+	configuration.siteName = parseSiteNameFromSiteHost(host)
+
 	p.setConfiguration(configuration)
+
+	p.webexClient = webex.NewClient(configuration.SiteHost, configuration.siteName)
 
 	return nil
 }
@@ -111,4 +120,13 @@ func parseHostFromUrl(url string) string {
 		return matches[1]
 	}
 	return strings.TrimSpace(url)
+}
+
+func parseSiteNameFromSiteHost(siteHost string) string {
+	r := regexp.MustCompile("^(.*?).webex.com")
+	matches := r.FindStringSubmatch(siteHost)
+	if matches != nil {
+		return matches[1]
+	}
+	return ""
 }

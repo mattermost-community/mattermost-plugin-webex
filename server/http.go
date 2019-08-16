@@ -83,8 +83,10 @@ func (p *Plugin) handleStartMeeting(w http.ResponseWriter, r *http.Request) (int
 		return http.StatusInternalServerError, err
 	}
 
-	siteHost := p.getConfiguration().SiteHost
-	if siteHost == "" {
+	config := p.getConfiguration()
+	siteHost := config.SiteHost
+	siteName := config.siteName
+	if siteHost == "" || siteName == "" {
 		return http.StatusInternalServerError, errors.New("Unable to setup a meeting; the Webex plugin has not been configured yet.\nPlease ask your system administrator to set the `Webex Site Hostname` in `System Console -> PLUGINS -> Webex`.")
 	}
 
