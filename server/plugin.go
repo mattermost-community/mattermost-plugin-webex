@@ -5,7 +5,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/mattermost/mattermost-plugin-webex/server/webex"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
@@ -26,8 +25,6 @@ const (
 
 type Plugin struct {
 	plugin.MattermostPlugin
-
-	webexClient *webex.Client
 
 	// botUserID of the created bot account.
 	botUserID string
