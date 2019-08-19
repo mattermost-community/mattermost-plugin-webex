@@ -6,6 +6,7 @@
   "license": "Apache-2.0",
   "main": "src/index.js",
   "scripts": {
+    "run": "webpack --progress --watch",
     "build": "webpack --mode=production",
     "lint": "eslint --ignore-pattern node_modules --ignore-pattern dist --ext .js --ext .jsx . --quiet",
     "fix": "eslint --ignore-pattern node_modules --ignore-pattern dist --ext .js --ext .jsx . --quiet --fix"
