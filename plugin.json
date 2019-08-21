@@ -1,7 +1,7 @@
 {
     "id": "com.mattermost.webex",
     "name": "Webex",
-    "description": "Webex audio and video conferencing plugin for Mattermost 5.12+.",
+    "description": "Webex audio and video conferencing plugin for Mattermost.",
     "version": "0.0.1",
     "min_server_version": "5.12.0",
     "server": {
@@ -17,10 +17,10 @@
     "settings_schema": {
         "settings": [
             {
-                "key": "SiteURL",
-                "display_name": "Webex Site URL",
+                "key": "SiteHost",
+                "display_name": "Webex Site Hostname",
                 "type": "text",
-                "help_text": "The URL for your team's Webex site. For example: teamsite.webex.com",
+                "help_text": "The hostname for your team's Webex site. For example: teamsite.webex.com",
                 "placeholder": "teamsite.webex.com"
             }
         ]

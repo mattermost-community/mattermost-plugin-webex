@@ -80,34 +80,6 @@ export default class PostTypeWebex extends React.PureComponent {
                     {'JOIN MEETING'}
                 </a>
             );
-
-            if (props.meeting_personal) {
-                subtitle = (
-                    <span>
-                        {'Personal Meeting ID (PMI) : '}
-                        <a
-                            rel='noopener noreferrer'
-                            target='_blank'
-                            href={props.meeting_link}
-                        >
-                            {props.meeting_id}
-                        </a>
-                    </span>
-                );
-            } else {
-                subtitle = (
-                    <span>
-                        {'Meeting ID : '}
-                        <a
-                            rel='noopener noreferrer'
-                            target='_blank'
-                            href={props.meeting_link}
-                        >
-                            {props.meeting_id}
-                        </a>
-                    </span>
-                );
-            }
         } else if (props.meeting_status === 'ENDED') {
             preText = `${this.props.creatorName} has ended the meeting`;
 
@@ -133,7 +105,7 @@ export default class PostTypeWebex extends React.PureComponent {
             );
         }
 
-        let title = 'Zoom Meeting';
+        let title = 'Webex Meeting';
         if (props.meeting_topic) {
             title = props.meeting_topic;
         }
