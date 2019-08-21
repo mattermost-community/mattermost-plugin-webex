@@ -10,6 +10,7 @@ import (
 const helpText = "###### Mattermost Webex Plugin - Slash Command Help\n" +
 	"* `/webex help` - This help text\n" +
 	"* `/webex info` - Display your current settings\n" +
+	"* `/webex start` - Start a Webex meeting in your room\n" +
 	"* `/webex room <room id>` - Sets your personal Room ID. Meetings you start will use this ID. This setting is required only if your Webex account email address is different from your Mattermost account email address, or if the username of your email does not match your Personal Room ID or User name on your Webex site.\n" +
 	"* `/webex room-reset` - Removes your room setting."
 
@@ -24,6 +25,7 @@ var webexCommandHandler = CommandHandler{
 	handlers: map[string]CommandHandlerFunc{
 		"help":       commandHelp,
 		"info":       executeInfo,
+		"start":      executeStart,
 		"room":       executeRoom,
 		"room-reset": executeRoomReset,
 		"reqRoom":    executeReqRoomId,
@@ -141,4 +143,20 @@ func executeReqRoomId(p *Plugin, c *plugin.Context, header *model.CommandArgs, a
 		return p.responsef(header, err.Error())
 	}
 	return p.responsef(header, "The room is: %s", roomUrl)
+}
+
+func executeStart(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
+	user, appErr := p.API.GetUser(header.UserId)
+	if appErr != nil {
+		p.errorf("Error getting UserId, err: %v", appErr)
+		return p.responsef(header, "Error getting user information, please contact your system administrator.")
+	}
+
+	_, _, status, err := p.startMeeting(user.Id, header.ChannelId)
+	if err != nil {
+		p.errorf("Error creating new meeting post, status: %v, err: %v", status, err)
+		return p.responsef(header, "Error creating new meeting post, please contact your system administrator.")
+	}
+
+	return &model.CommandResponse{}
 }
