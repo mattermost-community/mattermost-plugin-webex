@@ -41,15 +41,12 @@ type Plugin struct {
 	store Store
 
 	// the http client
-	webexClient *webex.Client
+	webexClient webex.Client
 }
 
 // OnActivate checks if the configurations is valid and ensures the bot account exists
 func (p *Plugin) OnActivate() error {
 	config := p.getConfiguration()
-	if err := config.IsValid(); err != nil {
-		return err
-	}
 
 	botUserID, err := p.Helpers.EnsureBot(&model.Bot{
 		Username:    botUserName,
@@ -77,12 +74,12 @@ func (p *Plugin) OnActivate() error {
 
 	p.store = NewStore(p)
 
+	p.webexClient = webex.NewClient(config.SiteHost, config.siteName)
+
 	err = p.API.RegisterCommand(getCommand())
 	if err != nil {
 		return errors.WithMessage(err, "OnActivate: failed to register command")
 	}
-
-	p.webexClient = webex.NewClient(config.SiteHost, config.siteName)
 
 	return nil
 }
@@ -109,4 +106,14 @@ func (p *Plugin) infof(f string, args ...interface{}) {
 
 func (p *Plugin) errorf(f string, args ...interface{}) {
 	p.API.LogError(fmt.Sprintf(f, args...))
+}
+
+func (p *Plugin) postEphemeralError(channelId, userId, msg string) {
+	post := &model.Post{
+		UserId:    p.botUserID,
+		ChannelId: channelId,
+		Message:   msg,
+	}
+
+	_ = p.API.SendEphemeralPost(userId, post)
 }

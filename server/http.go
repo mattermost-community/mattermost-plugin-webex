@@ -7,16 +7,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/mattermost/mattermost-plugin-webex/server/webex"
 	"github.com/mattermost/mattermost-server/model"
 	"github.com/mattermost/mattermost-server/plugin"
 	"net/http"
-	"net/url"
 	"strconv"
 )
 
 const (
 	routeAPImeetings = "/api/v1/meetings"
-	StatusStarted    = "STARTED"
 )
 
 func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Request) {
@@ -65,6 +64,10 @@ func (p *Plugin) handleStartMeeting(w http.ResponseWriter, r *http.Request) (int
 		return http.StatusUnauthorized, errors.New("not authorized")
 	}
 
+	if !p.getConfiguration().IsValid() {
+		return http.StatusInternalServerError, errors.New("Unable to setup a meeting; the Webex plugin has not been configured correctly.")
+	}
+
 	var req startMeetingRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return http.StatusBadRequest, fmt.Errorf("err: %v", err)
@@ -78,29 +81,14 @@ func (p *Plugin) handleStartMeeting(w http.ResponseWriter, r *http.Request) (int
 		return http.StatusForbidden, errors.New("forbidden")
 	}
 
-	roomId, err := p.getRoomOrDefault(userId)
+	roomUrl, err := p.getRoomUrl(userId)
 	if err != nil {
-		return http.StatusInternalServerError, err
+		p.postEphemeralError(req.ChannelID, userId, err.Error())
+		return http.StatusBadRequest, nil
 	}
 
-	config := p.getConfiguration()
-	siteHost := config.SiteHost
-	siteName := config.siteName
-	if siteHost == "" || siteName == "" {
-		return http.StatusInternalServerError, errors.New("Unable to setup a meeting; the Webex plugin has not been configured yet.\nPlease ask your system administrator to set the `Webex Site Hostname` in `System Console -> PLUGINS -> Webex`.")
-	}
-
-	webexJoinURL := (&url.URL{
-		Scheme: "https",
-		Host:   siteHost,
-		Path:   "/join/" + roomId,
-	}).String()
-
-	webexStartURL := (&url.URL{
-		Scheme: "https",
-		Host:   siteHost,
-		Path:   "/start/" + roomId,
-	}).String()
+	webexJoinURL := p.makeJoinUrl(roomUrl)
+	webexStartURL := p.makeStartUrl(roomUrl)
 
 	joinPost := &model.Post{
 		UserId:    p.botUserID,
@@ -109,7 +97,7 @@ func (p *Plugin) handleStartMeeting(w http.ResponseWriter, r *http.Request) (int
 		Type:      "custom_webex",
 		Props: map[string]interface{}{
 			"meeting_link":     webexJoinURL,
-			"meeting_status":   StatusStarted,
+			"meeting_status":   webex.StatusStarted,
 			"meeting_topic":    "Webex Meeting",
 			"starting_user_id": userId,
 		},

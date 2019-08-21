@@ -14,17 +14,16 @@ type GetPMRRBody struct {
 }
 
 type GetPMRRBodyContent struct {
-	XMLName             xml.Name      `xml:"bodyContent"`
-	Avatar              GetPMRRAvatar `xml:"avatar"`
-	PersonalMeetingRoom PMR           `xml:"personalMeetingRoom"`
-	//HostMeetingURL string        `xml:"hostMeetingURL"`
+	XMLName             xml.Name `xml:"bodyContent"`
+	Avatar              Avatar   `xml:"avatar"`
+	PersonalMeetingRoom PMR      `xml:"personalMeetingRoom"`
 }
 
-type GetPMRRAvatar struct {
-	//XMLName          xml.Name `xml:"avatar"`
-	Url              string `xml:"url"`
-	LastModifiedTime int    `xml:"lastModifiedTime"`
-	IsUploaded       bool   `xml:"isUploaded"`
+type Avatar struct {
+	XMLName          xml.Name `xml:"avatar"`
+	Url              string   `xml:"url"`
+	LastModifiedTime int      `xml:"lastModifiedTime"`
+	IsUploaded       bool     `xml:"isUploaded"`
 }
 
 type PMR struct {

@@ -14,6 +14,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+const StatusStarted = "STARTED"
+
 type ClientError struct {
 	StatusCode int
 	Err        error
@@ -23,22 +25,26 @@ func (ce *ClientError) Error() string {
 	return ce.Err.Error()
 }
 
+type Client interface {
+	GetPersonalMeetingRoomUrl(roomId, username, email string) (string, *ClientError)
+}
+
 // Client represents a Webex API client
-type Client struct {
+type client struct {
 	httpClient *http.Client
 	xmlURL     string
 	siteName   string
 }
 
 // NewClient returns a new Webex XML API client.
-func NewClient(siteHost, siteName string) *Client {
+func NewClient(siteHost, siteName string) Client {
 	webexURL := (&url.URL{
 		Scheme: "https",
 		Host:   siteHost,
 		Path:   "/WBXService/XMLService",
 	}).String()
 
-	return &Client{
+	return &client{
 		httpClient: &http.Client{},
 		xmlURL:     webexURL,
 		siteName:   siteName,
@@ -46,7 +52,7 @@ func NewClient(siteHost, siteName string) *Client {
 }
 
 // GetPersonalMeetingRoomUrl prefers roomId, username, and email for finding the PMR url (in that order).
-func (c *Client) GetPersonalMeetingRoomUrl(roomId, username, email string) (string, *ClientError) {
+func (c *client) GetPersonalMeetingRoomUrl(roomId, username, email string) (string, *ClientError) {
 	if roomId != "" {
 		pmrUrl, err := c.getPMRFromRoomId(roomId)
 		if err == nil && pmrUrl != "" {
@@ -87,10 +93,27 @@ const roomIdContent = `<personalUrl>%s</personalUrl>`
 const webexIdContent = `<webExId>%s</webExId>`
 const emailContent = `<email>%s</email>`
 
-func (c *Client) getPMRFromRoomId(roomId string) (string, *ClientError) {
+// getPMRFromRoomId gets a Personal Meeting Room using a roomId, or returns an error if not found
+func (c *client) getPMRFromRoomId(roomId string) (string, *ClientError) {
 	content := fmt.Sprintf(roomIdContent, roomId)
-	payload := fmt.Sprintf(payloadWrapper, c.siteName, content)
+	return c.getPMR(content)
+}
 
+// getPMRFromRoomId gets a Personal Meeting Room using a userName, or returns an error if not found
+func (c *client) getPMRFromUserName(userName string) (string, *ClientError) {
+	content := fmt.Sprintf(webexIdContent, userName)
+	return c.getPMR(content)
+}
+
+// getPMRFromRoomId gets a Personal Meeting Room using an email, or returns an error if not found
+func (c *client) getPMRFromEmail(email string) (string, *ClientError) {
+	content := fmt.Sprintf(emailContent, email)
+	return c.getPMR(content)
+}
+
+// getPMR gets a Personal Meeting Room given the body content
+func (c *client) getPMR(content string) (string, *ClientError) {
+	payload := fmt.Sprintf(payloadWrapper, c.siteName, content)
 	buf, cerr := c.request(payload)
 	if cerr != nil {
 		return "", cerr
@@ -105,15 +128,7 @@ func (c *Client) getPMRFromRoomId(roomId string) (string, *ClientError) {
 	return message.Body.BodyContent.PersonalMeetingRoom.PMRUrl, nil
 }
 
-func (c *Client) getPMRFromUserName(roomId string) (string, *ClientError) {
-	return "", nil
-}
-
-func (c *Client) getPMRFromEmail(roomId string) (string, *ClientError) {
-	return "", nil
-}
-
-func (c *Client) request(payload string) (*bytes.Buffer, *ClientError) {
+func (c *client) request(payload string) (*bytes.Buffer, *ClientError) {
 	rq, err := http.NewRequest("POST", c.xmlURL, bytes.NewReader([]byte(payload)))
 	if err != nil {
 		return nil, &ClientError{http.StatusInternalServerError, err}
@@ -162,4 +177,13 @@ func closeBody(r *http.Response) {
 		ioutil.ReadAll(r.Body)
 		r.Body.Close()
 	}
+}
+
+// For testing
+type MockClient struct {
+	SiteHost string
+}
+
+func (mc MockClient) GetPersonalMeetingRoomUrl(roomId, username, email string) (string, *ClientError) {
+	return "https://" + mc.SiteHost + "/meet/" + roomId, nil
 }

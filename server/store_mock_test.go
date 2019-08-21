@@ -6,5 +6,5 @@ func (store mockStore) StoreUserInfo(mattermostUserId string, info UserInfo) err
 	return nil
 }
 func (store mockStore) LoadUserInfo(mattermostUserId string) (UserInfo, error) {
-	return UserInfo{}, nil
+	return UserInfo{RoomID: "myroom", Email: "myemail@host.com"}, nil
 }

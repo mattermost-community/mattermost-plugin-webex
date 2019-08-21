@@ -6,6 +6,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/mattermost/mattermost-plugin-webex/server/webex"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
@@ -93,6 +94,7 @@ func TestPlugin(t *testing.T) {
 			api := &plugintest.API{}
 
 			api.On("GetChannelMember", "thechannelid", "theuserid").Return(&model.ChannelMember{}, nil)
+			api.On("GetUser", "theuserid").Return(&model.User{Email: "theusername@thehost.com"}, nil)
 
 			path, err := filepath.Abs("..")
 			require.Nil(t, err)
@@ -126,7 +128,7 @@ func TestPlugin(t *testing.T) {
 				mock.AnythingOfTypeArgument("string"),
 				mock.AnythingOfTypeArgument("string")).Return(nil)
 
-			user, _ := json.Marshal(UserInfo{"myroom"})
+			user, _ := json.Marshal(UserInfo{"myemail", "myroom"})
 			api.On("KVGet", mock.AnythingOfTypeArgument("string")).Return(user, (*model.AppError)(nil))
 
 			api.On("CreatePost",
@@ -151,6 +153,8 @@ func TestPlugin(t *testing.T) {
 			err = p.OnActivate()
 			require.Nil(t, err)
 
+			p.webexClient = webex.MockClient{tc.SiteHost}
+
 			w := httptest.NewRecorder()
 
 			p.ServeHTTP(&plugin.Context{}, w, tc.Request)
@@ -168,7 +172,7 @@ func TestPlugin(t *testing.T) {
 				Type:      "custom_webex",
 				Props: map[string]interface{}{
 					"meeting_link":     webexJoinURL,
-					"meeting_status":   StatusStarted,
+					"meeting_status":   webex.StatusStarted,
 					"meeting_topic":    "Webex Meeting",
 					"starting_user_id": "theuserid",
 				},

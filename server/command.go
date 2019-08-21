@@ -10,7 +10,8 @@ import (
 const helpText = "###### Mattermost Webex Plugin - Slash Command Help\n" +
 	"* `/webex help` - This help text\n" +
 	"* `/webex info` - Display your current settings\n" +
-	"* `/webex room <room id>` - Set your room id. Meetings you start will use this id. Your room is currently set to: `%s`\n"
+	"* `/webex room <room id>` - Sets your personal Room ID. Meetings you start will use this ID. This setting is required only if your Webex account email address is different from your Mattermost account email address, or if the username of your email does not match your Personal Room ID or User name on your Webex site.\n" +
+	"* `/webex room-reset` - Removes your room setting."
 
 type CommandHandlerFunc func(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse
 
@@ -21,10 +22,11 @@ type CommandHandler struct {
 
 var webexCommandHandler = CommandHandler{
 	handlers: map[string]CommandHandlerFunc{
-		"help":    commandHelp,
-		"info":    executeInfo,
-		"room":    executeRoom,
-		"reqRoom": executeReqRoomId,
+		"help":       commandHelp,
+		"info":       executeInfo,
+		"room":       executeRoom,
+		"room-reset": executeRoomReset,
+		"reqRoom":    executeReqRoomId,
 	},
 	defaultHandler: commandHelp,
 }
@@ -44,11 +46,7 @@ func commandHelp(p *Plugin, c *plugin.Context, header *model.CommandArgs, args .
 }
 
 func (p *Plugin) help(header *model.CommandArgs) *model.CommandResponse {
-	roomId, err := p.getRoomOrDefault(header.UserId)
-	if err != nil {
-		return p.responsef(header, err.Error())
-	}
-	p.postCommandResponse(header, fmt.Sprintf(helpText, roomId))
+	p.postCommandResponse(header, helpText)
 	return &model.CommandResponse{}
 }
 
@@ -66,7 +64,7 @@ func getCommand() *model.Command {
 		DisplayName:      "Webex",
 		Description:      "Integration with Webex.",
 		AutoComplete:     true,
-		AutoCompleteDesc: "Available commands: help, info, room",
+		AutoCompleteDesc: "Available commands: help, info, start, room, room-reset",
 		AutoCompleteHint: "[command]",
 	}
 }
@@ -108,27 +106,37 @@ func executeRoom(p *Plugin, c *plugin.Context, header *model.CommandArgs, args .
 		return p.responsef(header, "error storing user info, please contact your system administrator")
 	}
 
-	return p.responsef(header, "Room is set to: %v", userInfo.RoomID)
+	return p.responsef(header, "Room is set to: `%v`", userInfo.RoomID)
+}
+
+func executeRoomReset(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
+	userInfo, _ := p.store.LoadUserInfo(header.UserId)
+	userInfo.RoomID = ""
+	err := p.store.StoreUserInfo(header.UserId, userInfo)
+	if err != nil {
+		p.errorf("error in executeRoom: %v", err)
+		return p.responsef(header, "error storing user info, please contact your system administrator")
+	}
+
+	return p.responsef(header, "Room is set to: `<not set>`")
 }
 
 func executeInfo(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
-	roomId, err := p.getRoomOrDefault(header.UserId)
+	roomId, err := p.getRoom(header.UserId)
 	if err != nil {
 		return p.responsef(header, err.Error())
 	}
+	if roomId == "" {
+		roomId = "<not set>"
+	}
 
-	return p.responsef(header, "Webex site hostname: %s\nYour personal meeting room: %s", p.getConfiguration().SiteHost, roomId)
+	return p.responsef(header, "Webex site hostname: `%s`\nYour personal meeting room: `%s`", p.getConfiguration().SiteHost, roomId)
 }
 
 func executeReqRoomId(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
-	roomId, err := p.getRoomOrDefault(header.UserId)
+	roomUrl, err := p.getRoomUrl(header.UserId)
 	if err != nil {
 		return p.responsef(header, err.Error())
 	}
-
-	roomUrl, cerr := p.webexClient.GetPersonalMeetingRoomUrl(roomId, "", "")
-	if cerr != nil {
-		return p.responsef(header, "error: %+v", cerr)
-	}
-	return p.responsef(header, "The url is: %s", roomUrl)
+	return p.responsef(header, "The room is: %s", roomUrl)
 }

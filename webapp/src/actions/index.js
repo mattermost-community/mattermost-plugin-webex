@@ -10,6 +10,9 @@ export function startMeeting(channelId) {
         try {
             await Client.startMeeting(channelId, true);
         } catch (error) {
+            if (error.response && error.response.statusCode === 400) {
+                return {error};
+            }
             let m = 'We could not verify your Mattermost account in Webex. Please ensure that your Mattermost email address matches your Webex email address.';
             if (error.response && error.response.text) {
                 const e = JSON.parse(error.response.text);
