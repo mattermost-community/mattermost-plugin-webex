@@ -121,17 +121,20 @@ func (p *Plugin) postEphemeralError(channelId, userId, msg string) {
 
 // startMeeting can be used by the `/webex start` slash command or the http handleStartMeeting
 // returns the joinPost, startPost, http status code and a descriptive error
-func (p *Plugin) startMeeting(mattermostUserId string, channelId string) (*model.Post, *model.Post, int, error) {
+func (p *Plugin) startMeeting(startedByUserId, meetingRoomOfUserId, channelId, meetingStatus string) (*model.Post, *model.Post, int, error) {
 	if !p.getConfiguration().IsValid() {
 		return nil, nil, http.StatusInternalServerError, errors.New("Unable to setup a meeting; the Webex plugin has not been configured correctly.")
 	}
 
-	roomUrl, err := p.getRoomUrl(mattermostUserId)
+	roomUrl, err := p.getRoomUrlFromMMId(meetingRoomOfUserId)
 	if err != nil {
-		p.postEphemeralError(channelId, mattermostUserId, err.Error())
-		return nil, nil, http.StatusBadRequest, nil
+		return nil, nil, http.StatusBadRequest, err
 	}
 
+	return p.startMeetingFromRoomUrl(roomUrl, startedByUserId, channelId, meetingStatus)
+}
+
+func (p *Plugin) startMeetingFromRoomUrl(roomUrl, startedByUserId, channelId, meetingStatus string) (*model.Post, *model.Post, int, error) {
 	webexJoinURL := p.makeJoinUrl(roomUrl)
 	webexStartURL := p.makeStartUrl(roomUrl)
 
@@ -142,9 +145,9 @@ func (p *Plugin) startMeeting(mattermostUserId string, channelId string) (*model
 		Type:      "custom_webex",
 		Props: map[string]interface{}{
 			"meeting_link":     webexJoinURL,
-			"meeting_status":   webex.StatusStarted,
+			"meeting_status":   meetingStatus,
 			"meeting_topic":    "Webex Meeting",
-			"starting_user_id": mattermostUserId,
+			"starting_user_id": startedByUserId,
 		},
 	}
 
@@ -159,7 +162,10 @@ func (p *Plugin) startMeeting(mattermostUserId string, channelId string) (*model
 		Message:   fmt.Sprintf("To start the meeting, click here: %s.", webexStartURL),
 	}
 
-	createdStartPost := p.API.SendEphemeralPost(mattermostUserId, startPost)
+	var createdStartPost *model.Post
+	if meetingStatus == webex.StatusStarted {
+		createdStartPost = p.API.SendEphemeralPost(startedByUserId, startPost)
+	}
 
 	return createdJoinPost, createdStartPost, http.StatusOK, nil
 }

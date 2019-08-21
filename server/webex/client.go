@@ -14,7 +14,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-const StatusStarted = "STARTED"
+const (
+	StatusStarted = "STARTED"
+	StatusInvited = "INVITED"
+)
 
 type ClientError struct {
 	StatusCode int

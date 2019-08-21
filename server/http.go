@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/mattermost/mattermost-plugin-webex/server/webex"
 	"github.com/mattermost/mattermost-server/plugin"
 	"net/http"
 	"strconv"
@@ -75,8 +76,9 @@ func (p *Plugin) handleStartMeeting(w http.ResponseWriter, r *http.Request) (int
 		return http.StatusForbidden, errors.New("forbidden")
 	}
 
-	createdJoinPost, _, status, err := p.startMeeting(userId, req.ChannelID)
+	createdJoinPost, _, status, err := p.startMeeting(userId, userId, req.ChannelID, webex.StatusStarted)
 	if err != nil {
+		p.postEphemeralError(req.ChannelID, userId, err.Error())
 		return status, err
 	}
 

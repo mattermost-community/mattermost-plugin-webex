@@ -45,18 +45,8 @@ func (p *Plugin) getEmailAndEmailName(mattermostUserId string) (string, string, 
 	return user.Email, emailName, nil
 }
 
-func (p *Plugin) getUrlFromRoom(mattermostUserId string) (string, error) {
-	userInfo, err := p.store.LoadUserInfo(mattermostUserId)
-	if err == ErrUserNotFound {
-		return "", err
-	}
-	if err != nil {
-		// unexpected error
-		p.errorf("error from the store when retrieving room for mattermostUserId: %s, error: %v", mattermostUserId, err)
-		return "", errors.New(fmt.Sprintf("error getting your room from the store, please contact your system administrator. Error: %v", err))
-	}
-
-	roomUrl, cerr := p.webexClient.GetPersonalMeetingRoomUrl(userInfo.RoomID, "", "")
+func (p *Plugin) getUrlFromRoomId(roomId string) (string, error) {
+	roomUrl, cerr := p.webexClient.GetPersonalMeetingRoomUrl(roomId, "", "")
 	if cerr != nil {
 		return "", cerr
 	}
@@ -78,33 +68,35 @@ func (p *Plugin) getUrlFromEmail(mattermostUserId string) (string, error) {
 }
 
 func (p *Plugin) getRoomOrDefault(mattermostUserId string) (string, error) {
-	userInfo, err := p.store.LoadUserInfo(mattermostUserId)
+	roomId, err := p.getRoom(mattermostUserId)
 	if err == ErrUserNotFound {
-		// expected error
 		_, emailName, err2 := p.getEmailAndEmailName(mattermostUserId)
 		if err2 != nil {
 			return "", err2
 		}
 		return emailName, nil
 	} else if err != nil {
-		// unexpected error
-		p.errorf("error from the store when retrieving room for mattermostUserId: %s, error: %v", mattermostUserId, err)
-		return "", errors.New(fmt.Sprintf("error retrieving your room from the store, please contact your system administrator. Error: %v", err))
+		return "", err
 	}
 
-	return userInfo.RoomID, nil
+	return roomId, nil
 }
 
 func (p *Plugin) getRoom(mattermostUserId string) (string, error) {
 	userInfo, err := p.store.LoadUserInfo(mattermostUserId)
-	if err != nil {
+	if err == ErrUserNotFound {
 		return "", err
+	}
+	if err != nil {
+		// unexpected error
+		p.errorf("error from the store when retrieving room for mattermostUserId: %s, error: %v", mattermostUserId, err)
+		return "", errors.New(fmt.Sprintf("error getting your room from the store, please contact your system administrator. Error: %v", err))
 	}
 	return userInfo.RoomID, nil
 }
 
-// getRoomUrl will find the correct url for mattermostUserId, or return a message explaining why it couldn't.
-func (p *Plugin) getRoomUrl(mattermostUserId string) (string, error) {
+// getRoomUrlFromMMId will find the correct url for mattermostUserId, or return a message explaining why it couldn't.
+func (p *Plugin) getRoomUrlFromMMId(mattermostUserId string) (string, error) {
 	email, emailName, err := p.getEmailAndEmailName(mattermostUserId)
 	if err != nil {
 		return "", fmt.Errorf("Error getting email and emailName: %v", err)
@@ -112,9 +104,9 @@ func (p *Plugin) getRoomUrl(mattermostUserId string) (string, error) {
 	roomId, err := p.getRoom(mattermostUserId)
 	if err == nil && roomId != "" {
 		// Look for their url using roomId
-		roomUrl, err := p.getUrlFromRoom(mattermostUserId)
+		roomUrl, err := p.getUrlFromRoomId(roomId)
 		if err != nil {
-			return "", fmt.Errorf("No Personal Room link found at `%s` for your room: `%s`", p.getConfiguration().SiteHost, roomId)
+			return "", fmt.Errorf("No Personal Room link found at `%s` for the room: `%s`", p.getConfiguration().SiteHost, roomId)
 		}
 
 		return roomUrl, nil
@@ -127,5 +119,4 @@ func (p *Plugin) getRoomUrl(mattermostUserId string) (string, error) {
 	}
 
 	return roomUrl, nil
-
 }

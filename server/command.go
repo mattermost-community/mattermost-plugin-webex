@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/mattermost/mattermost-plugin-webex/server/webex"
 	"github.com/mattermost/mattermost-server/model"
 	"github.com/mattermost/mattermost-server/plugin"
 	"strings"
@@ -11,10 +12,9 @@ const helpText = "###### Mattermost Webex Plugin - Slash Command Help\n" +
 	"* `/webex help` - This help text\n" +
 	"* `/webex info` - Display your current settings\n" +
 	"* `/webex start` - Start a Webex meeting in your room\n" +
-	"* `/webex <room id> - Shares a Join Meeting button for the Webex Personal Room meeting that is associated with the specified Personal Room ID, whether it’s your Personal Room ID or someone else’s.\n" +
-	"* `/webex <meeting number> - Shares a Join Meeting button for a scheduled Webex meeting that has the specified meeting number.\n" +
-	"* `/webex <@username> - Shares a Join Meeting button for the Webex Personal Room meeting that is associated with that Mattermost team member’s email address.\n" +
-	"#### Room Settings\n" +
+	"* `/webex <room id>` - Shares a Join Meeting button for the Webex Personal Room meeting that is associated with the specified Personal Room ID, whether it’s your Personal Room ID or someone else’s.\n" +
+	"* `/webex <@username>` - Shares a Join Meeting button for the Webex Personal Room meeting that is associated with that Mattermost team member.\n" +
+	"###### Room Settings\n" +
 	"* `/webex room <room id>` - Sets your personal Room ID. Meetings you start will use this ID. This setting is required only if your Webex account email address is different from your Mattermost account email address, or if the username of your email does not match your Personal Room ID or User name on your Webex site.\n" +
 	"* `/webex room-reset` - Removes your room setting."
 
@@ -27,14 +27,14 @@ type CommandHandler struct {
 
 var webexCommandHandler = CommandHandler{
 	handlers: map[string]CommandHandlerFunc{
-		"help":       commandHelp,
+		"help":       executeHelp,
 		"info":       executeInfo,
 		"start":      executeStart,
 		"room":       executeRoom,
 		"room-reset": executeRoomReset,
 		"reqRoom":    executeReqRoomId,
 	},
-	defaultHandler: commandStartWithArg,
+	defaultHandler: executeStartWithArg,
 }
 
 func (ch CommandHandler) Handle(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
@@ -47,7 +47,7 @@ func (ch CommandHandler) Handle(p *Plugin, c *plugin.Context, header *model.Comm
 	return ch.defaultHandler(p, c, header, args...)
 }
 
-func commandHelp(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
+func executeHelp(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
 	return p.help(header)
 }
 
@@ -70,7 +70,7 @@ func getCommand() *model.Command {
 		DisplayName:      "Webex",
 		Description:      "Integration with Webex.",
 		AutoComplete:     true,
-		AutoCompleteDesc: "Available commands: help, info, start, room, room-reset",
+		AutoCompleteDesc: "Available commands: help, info, start, <room id/@username>, room, room-reset",
 		AutoCompleteHint: "[command]",
 	}
 }
@@ -100,8 +100,12 @@ func executeRoom(p *Plugin, c *plugin.Context, header *model.CommandArgs, args .
 	if err != nil {
 		return p.responsef(header, err.Error())
 	}
+	if roomId == "" {
+		roomId = "<not set>"
+	}
+
 	if len(args) != 1 {
-		return p.responsef(header, "Please enter one new room id. Current room id is: %s", roomId)
+		return p.responsef(header, "Please enter one new room id. Current room id is: `%s`", roomId)
 	}
 
 	userInfo, _ := p.store.LoadUserInfo(header.UserId)
@@ -142,7 +146,7 @@ func executeInfo(p *Plugin, c *plugin.Context, header *model.CommandArgs, args .
 // executeReqRoomId is a quicker way to get the room through the XML API. Not documented for end users.
 // TODO: remove for v1 release.
 func executeReqRoomId(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
-	roomUrl, err := p.getRoomUrl(header.UserId)
+	roomUrl, err := p.getRoomUrlFromMMId(header.UserId)
 	if err != nil {
 		return p.responsef(header, err.Error())
 	}
@@ -150,21 +154,49 @@ func executeReqRoomId(p *Plugin, c *plugin.Context, header *model.CommandArgs, a
 }
 
 func executeStart(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
-	user, appErr := p.API.GetUser(header.UserId)
-	if appErr != nil {
-		p.errorf("Error getting UserId, err: %v", appErr)
-		return p.responsef(header, "Error getting user information, please contact your system administrator.")
+	if err := p.startMeetingForUserId(header, header.UserId, header.UserId, webex.StatusStarted); err != nil {
+		return p.responsef(header, err.Error())
 	}
-
-	_, _, status, err := p.startMeeting(user.Id, header.ChannelId)
-	if err != nil {
-		p.errorf("Error creating new meeting post, status: %v, err: %v", status, err)
-		return p.responsef(header, "Error creating new meeting post, please contact your system administrator.")
-	}
-
 	return &model.CommandResponse{}
 }
 
-func executeStartWithArgs(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
+func (p *Plugin) startMeetingForUserId(header *model.CommandArgs, startedByUserId, meetingRoomOfUserId, meetingStatus string) error {
+	if _, _, _, err := p.startMeeting(startedByUserId, meetingRoomOfUserId, header.ChannelId, meetingStatus); err != nil {
+		return err
+	}
+	return nil
+}
 
+// executeStartWithArg looks for meeting urls given: room id, @username
+func executeStartWithArg(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
+	if len(args) != 1 {
+		return p.help(header)
+	}
+
+	arg := args[0]
+	if strings.HasPrefix(arg, "@") {
+		// we were given a user
+		user, appErr := p.API.GetUserByUsername(arg[1:])
+		if appErr != nil {
+			return p.responsef(header, "Could not find the user `%s`. Please make sure you typed the name correctly and try again.", arg)
+		}
+		if err := p.startMeetingForUserId(header, header.UserId, user.Id, webex.StatusInvited); err != nil {
+			return p.responsef(header, "Unable to create a meeting at `%s` for user: `%s`. They may not have their roomId set correctly, or their Mattermost email is not the same as their Webex email.", p.getConfiguration().SiteHost, arg)
+		}
+		return &model.CommandResponse{}
+	}
+
+	// we were given a roomId
+	roomUrl, err := p.getUrlFromRoomId(arg)
+	if err != nil {
+		return p.responsef(header, "No Personal Room link found at `%s` for the room: `%s`", p.getConfiguration().SiteHost, arg)
+	}
+
+	_, _, _, err = p.startMeetingFromRoomUrl(roomUrl, header.UserId, header.ChannelId, webex.StatusInvited)
+	if err != nil {
+		p.errorf("executeStartWithArg - Error creating the invitation posts, err: %v", err)
+		return p.responsef(header, "Failed to make the invitation post. Please contact your system administrator.")
+	}
+
+	return &model.CommandResponse{}
 }
