@@ -11,6 +11,10 @@ const helpText = "###### Mattermost Webex Plugin - Slash Command Help\n" +
 	"* `/webex help` - This help text\n" +
 	"* `/webex info` - Display your current settings\n" +
 	"* `/webex start` - Start a Webex meeting in your room\n" +
+	"* `/webex <room id> - Shares a Join Meeting button for the Webex Personal Room meeting that is associated with the specified Personal Room ID, whether it’s your Personal Room ID or someone else’s.\n" +
+	"* `/webex <meeting number> - Shares a Join Meeting button for a scheduled Webex meeting that has the specified meeting number.\n" +
+	"* `/webex <@username> - Shares a Join Meeting button for the Webex Personal Room meeting that is associated with that Mattermost team member’s email address.\n" +
+	"#### Room Settings\n" +
 	"* `/webex room <room id>` - Sets your personal Room ID. Meetings you start will use this ID. This setting is required only if your Webex account email address is different from your Mattermost account email address, or if the username of your email does not match your Personal Room ID or User name on your Webex site.\n" +
 	"* `/webex room-reset` - Removes your room setting."
 
@@ -30,7 +34,7 @@ var webexCommandHandler = CommandHandler{
 		"room-reset": executeRoomReset,
 		"reqRoom":    executeReqRoomId,
 	},
-	defaultHandler: commandHelp,
+	defaultHandler: commandStartWithArg,
 }
 
 func (ch CommandHandler) Handle(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
@@ -159,4 +163,8 @@ func executeStart(p *Plugin, c *plugin.Context, header *model.CommandArgs, args 
 	}
 
 	return &model.CommandResponse{}
+}
+
+func executeStartWithArgs(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
+
 }
