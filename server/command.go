@@ -133,6 +133,8 @@ func executeInfo(p *Plugin, c *plugin.Context, header *model.CommandArgs, args .
 	return p.responsef(header, "Webex site hostname: `%s`\nYour personal meeting room: `%s`", p.getConfiguration().SiteHost, roomId)
 }
 
+// executeReqRoomId is a quicker way to get the room through the XML API. Not documented for end users.
+// TODO: remove for v1 release.
 func executeReqRoomId(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
 	roomUrl, err := p.getRoomUrl(header.UserId)
 	if err != nil {
