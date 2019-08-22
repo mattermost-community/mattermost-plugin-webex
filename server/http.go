@@ -76,6 +76,10 @@ func (p *Plugin) handleStartMeeting(w http.ResponseWriter, r *http.Request) (int
 		return http.StatusForbidden, errors.New("forbidden")
 	}
 
+	if !p.getConfiguration().IsValid() {
+		return http.StatusInternalServerError, errors.New("Unable to setup a meeting; the Webex plugin has not been configured correctly. Please contact your system administrator.")
+	}
+
 	createdJoinPost, _, status, err := p.startMeeting(userId, userId, req.ChannelID, webex.StatusStarted)
 	if err != nil {
 		p.postEphemeralError(req.ChannelID, userId, err.Error())

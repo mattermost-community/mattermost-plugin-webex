@@ -37,6 +37,18 @@ func TestPlugin(t *testing.T) {
 		strings.NewReader("{\"channel_id\": \"thechannelid\"}"))
 	validMeetingRequest3.Header.Add("Mattermost-User-Id", "theuserid")
 
+	validMeetingRequest4 := httptest.NewRequest("POST", "/api/v1/meetings",
+		strings.NewReader("{\"channel_id\": \"thechannelid\"}"))
+	validMeetingRequest4.Header.Add("Mattermost-User-Id", "theuserid")
+
+	validMeetingRequest5 := httptest.NewRequest("POST", "/api/v1/meetings",
+		strings.NewReader("{\"channel_id\": \"thechannelid\"}"))
+	validMeetingRequest5.Header.Add("Mattermost-User-Id", "theuserid")
+
+	validMeetingRequest6 := httptest.NewRequest("POST", "/api/v1/meetings",
+		strings.NewReader("{\"channel_id\": \"thechannelid\"}"))
+	validMeetingRequest6.Header.Add("Mattermost-User-Id", "theuserid")
+
 	invalidMeetingRequestGet := httptest.NewRequest("GET", "/api/v1/meetings",
 		strings.NewReader("{\"channel_id\": \"thechannelid\"}"))
 	invalidMeetingRequestGet.Header.Add("Mattermost-User-Id", "theuserid")
@@ -45,10 +57,14 @@ func TestPlugin(t *testing.T) {
 		strings.NewReader("{\"channellll_id\": \"thechannelid\"}"))
 	invalidMeetingRequestNoChannel.Header.Add("Mattermost-User-Id", "theuserid")
 
+	validUser := UserInfo{"myemail@test.com", "myroom"}
+
 	for _, tc := range []struct {
 		Name               string
 		Request            *http.Request
 		SiteHost           string
+		User               UserInfo
+		Room               string
 		ExpectedStatusCode int
 	}{
 		{
@@ -56,36 +72,72 @@ func TestPlugin(t *testing.T) {
 			Request:            noAuthMeetingRequest,
 			SiteHost:           "hostname.webex.com",
 			ExpectedStatusCode: http.StatusUnauthorized,
+			User:               validUser,
+			Room:               "myroom",
 		},
 		{
 			Name:               "Valid meeting request",
 			Request:            validMeetingRequest,
 			SiteHost:           "hostname.webex.com",
 			ExpectedStatusCode: http.StatusOK,
+			User:               validUser,
+			Room:               "myroom",
 		},
 		{
 			Name:               "No SiteHost set",
 			Request:            validMeetingRequest2,
 			SiteHost:           "",
 			ExpectedStatusCode: http.StatusInternalServerError,
+			User:               validUser,
+			Room:               "myroom",
 		},
 		{
 			Name:               "Invalid SiteHost set",
 			Request:            validMeetingRequest3,
 			SiteHost:           "blah.blah.webex.co",
 			ExpectedStatusCode: http.StatusInternalServerError,
+			User:               validUser,
+			Room:               "myroom",
 		},
 		{
 			Name:               "Invalid meeting request: using Get",
 			Request:            invalidMeetingRequestGet,
 			SiteHost:           "hostname.webex.com",
 			ExpectedStatusCode: http.StatusMethodNotAllowed,
+			User:               validUser,
+			Room:               "myroom",
 		},
 		{
 			Name:               "Invalid meeting request: no channel",
 			Request:            invalidMeetingRequestNoChannel,
 			SiteHost:           "hostname.webex.com",
 			ExpectedStatusCode: http.StatusBadRequest,
+			User:               validUser,
+			Room:               "myroom",
+		},
+		{
+			Name:               "Valid meeting request: user has no roomId set, using their email.",
+			Request:            validMeetingRequest4,
+			SiteHost:           "hostname.webex.com",
+			ExpectedStatusCode: http.StatusOK,
+			User:               validUser,
+			Room:               "myroom",
+		},
+		{
+			Name:               "Invalid meeting request: user has no roomId set, using their email. Invalid email.",
+			Request:            validMeetingRequest5,
+			SiteHost:           "hostname.webex.com",
+			ExpectedStatusCode: http.StatusBadRequest,
+			User:               UserInfo{Email: "myemailtestcom", RoomID: ""},
+			Room:               "myemail",
+		},
+		{
+			Name:               "Valid meeting request: user has no email, but roomId is set.",
+			Request:            validMeetingRequest6,
+			SiteHost:           "hostname.webex.com",
+			ExpectedStatusCode: http.StatusOK,
+			User:               UserInfo{Email: "", RoomID: "blah"},
+			Room:               "blah",
 		},
 	} {
 		t.Run(tc.Name, func(t *testing.T) {
@@ -94,7 +146,7 @@ func TestPlugin(t *testing.T) {
 			api := &plugintest.API{}
 
 			api.On("GetChannelMember", "thechannelid", "theuserid").Return(&model.ChannelMember{}, nil)
-			api.On("GetUser", "theuserid").Return(&model.User{Email: "theusername@thehost.com"}, nil)
+			api.On("GetUser", "theuserid").Return(&model.User{Email: tc.User.Email}, nil)
 
 			path, err := filepath.Abs("..")
 			require.Nil(t, err)
@@ -128,7 +180,7 @@ func TestPlugin(t *testing.T) {
 				mock.AnythingOfTypeArgument("string"),
 				mock.AnythingOfTypeArgument("string")).Return(nil)
 
-			user, _ := json.Marshal(UserInfo{"myemail", "myroom"})
+			user, _ := json.Marshal(tc.User)
 			api.On("KVGet", mock.AnythingOfTypeArgument("string")).Return(user, (*model.AppError)(nil))
 
 			api.On("CreatePost",
@@ -144,8 +196,6 @@ func TestPlugin(t *testing.T) {
 			})
 			p.SetAPI(api)
 
-			p.store = mockStore{}
-
 			helpers := &plugintest.Helpers{}
 			helpers.On("EnsureBot", mock.AnythingOfType("*model.Bot")).Return(botUserID, nil)
 			p.SetHelpers(helpers)
@@ -153,7 +203,8 @@ func TestPlugin(t *testing.T) {
 			err = p.OnActivate()
 			require.Nil(t, err)
 
-			p.webexClient = webex.MockClient{tc.SiteHost}
+			p.store = mockStore{tc.User}
+			p.webexClient = webex.MockClient{SiteHost: tc.SiteHost}
 
 			w := httptest.NewRecorder()
 
@@ -164,7 +215,7 @@ func TestPlugin(t *testing.T) {
 				return
 			}
 
-			webexJoinURL := "https://" + tc.SiteHost + "/join/myroom"
+			webexJoinURL := "https://" + tc.SiteHost + "/join/" + tc.Room
 			expectedJoinPost := &model.Post{
 				UserId:    p.botUserID,
 				ChannelId: "thechannelid",
@@ -179,7 +230,7 @@ func TestPlugin(t *testing.T) {
 			}
 			api.AssertCalled(t, "CreatePost", expectedJoinPost)
 
-			webexStartURL := "https://" + tc.SiteHost + "/start/myroom"
+			webexStartURL := "https://" + tc.SiteHost + "/start/" + tc.Room
 			expectedStartPost := &model.Post{
 				UserId:    p.botUserID,
 				ChannelId: "thechannelid",

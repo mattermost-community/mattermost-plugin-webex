@@ -131,6 +131,8 @@ func parseSiteNameFromSiteHost(siteHost string) string {
 	return ""
 }
 
+// isValidHostName tests for a valid SiteHost in the config by seeing if we can get the site name
+// from it. If we can't, then the site host has not been correctly set.
 func isValidHostName(hostName string) bool {
 	return parseSiteNameFromSiteHost(hostName) != ""
 }

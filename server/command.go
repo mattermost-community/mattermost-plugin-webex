@@ -32,7 +32,6 @@ var webexCommandHandler = CommandHandler{
 		"start":      executeStart,
 		"room":       executeRoom,
 		"room-reset": executeRoomReset,
-		"reqRoom":    executeReqRoomId,
 	},
 	defaultHandler: executeStartWithArg,
 }
@@ -143,34 +142,25 @@ func executeInfo(p *Plugin, c *plugin.Context, header *model.CommandArgs, args .
 	return p.responsef(header, "Webex site hostname: `%s`\nYour personal meeting room: `%s`", p.getConfiguration().SiteHost, roomId)
 }
 
-// executeReqRoomId is a quicker way to get the room through the XML API. Not documented for end users.
-// TODO: remove for v1 release.
-func executeReqRoomId(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
-	roomUrl, err := p.getRoomUrlFromMMId(header.UserId)
-	if err != nil {
-		return p.responsef(header, err.Error())
-	}
-	return p.responsef(header, "The room is: %s", roomUrl)
-}
-
 func executeStart(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
+	if !p.getConfiguration().IsValid() {
+		return p.responsef(header, "Unable to setup a meeting; the Webex plugin has not been configured correctly. Please contact your system administrator.")
+	}
+
 	if err := p.startMeetingForUserId(header, header.UserId, header.UserId, webex.StatusStarted); err != nil {
 		return p.responsef(header, err.Error())
 	}
 	return &model.CommandResponse{}
 }
 
-func (p *Plugin) startMeetingForUserId(header *model.CommandArgs, startedByUserId, meetingRoomOfUserId, meetingStatus string) error {
-	if _, _, _, err := p.startMeeting(startedByUserId, meetingRoomOfUserId, header.ChannelId, meetingStatus); err != nil {
-		return err
-	}
-	return nil
-}
-
 // executeStartWithArg looks for meeting urls given: room id, @username
 func executeStartWithArg(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
 	if len(args) != 1 {
 		return p.help(header)
+	}
+
+	if !p.getConfiguration().IsValid() {
+		return p.responsef(header, "Unable to setup a meeting; the Webex plugin has not been configured correctly. Please contact your system administrator.")
 	}
 
 	arg := args[0]

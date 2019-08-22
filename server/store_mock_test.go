@@ -1,10 +1,12 @@
 package main
 
-type mockStore struct{}
+type mockStore struct {
+	userInfo UserInfo
+}
 
 func (store mockStore) StoreUserInfo(mattermostUserId string, info UserInfo) error {
 	return nil
 }
 func (store mockStore) LoadUserInfo(mattermostUserId string) (UserInfo, error) {
-	return UserInfo{RoomID: "myroom", Email: "myemail@host.com"}, nil
+	return store.userInfo, nil
 }

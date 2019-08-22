@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"regexp"
 
 	"github.com/pkg/errors"
 )
@@ -188,5 +189,23 @@ type MockClient struct {
 }
 
 func (mc MockClient) GetPersonalMeetingRoomUrl(roomId, username, email string) (string, *ClientError) {
-	return "https://" + mc.SiteHost + "/meet/" + roomId, nil
+	room := roomId
+	if room == "" {
+		room = username
+	}
+	if room == "" {
+		room = getUserFromEmail(email)
+	}
+	return "https://" + mc.SiteHost + "/meet/" + room, nil
+}
+
+// only for testing
+func getUserFromEmail(email string) string {
+	rexp := regexp.MustCompile("^(.*)@")
+	matches := rexp.FindStringSubmatch(email)
+	if matches == nil || matches[1] == "" {
+		return ""
+	}
+
+	return matches[1]
 }

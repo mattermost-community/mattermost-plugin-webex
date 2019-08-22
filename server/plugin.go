@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/mattermost/mattermost-plugin-webex/server/webex"
 	"io/ioutil"
-	"net/http"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -117,55 +116,4 @@ func (p *Plugin) postEphemeralError(channelId, userId, msg string) {
 	}
 
 	_ = p.API.SendEphemeralPost(userId, post)
-}
-
-// startMeeting can be used by the `/webex start` slash command or the http handleStartMeeting
-// returns the joinPost, startPost, http status code and a descriptive error
-func (p *Plugin) startMeeting(startedByUserId, meetingRoomOfUserId, channelId, meetingStatus string) (*model.Post, *model.Post, int, error) {
-	if !p.getConfiguration().IsValid() {
-		return nil, nil, http.StatusInternalServerError, errors.New("Unable to setup a meeting; the Webex plugin has not been configured correctly.")
-	}
-
-	roomUrl, err := p.getRoomUrlFromMMId(meetingRoomOfUserId)
-	if err != nil {
-		return nil, nil, http.StatusBadRequest, err
-	}
-
-	return p.startMeetingFromRoomUrl(roomUrl, startedByUserId, channelId, meetingStatus)
-}
-
-func (p *Plugin) startMeetingFromRoomUrl(roomUrl, startedByUserId, channelId, meetingStatus string) (*model.Post, *model.Post, int, error) {
-	webexJoinURL := p.makeJoinUrl(roomUrl)
-	webexStartURL := p.makeStartUrl(roomUrl)
-
-	joinPost := &model.Post{
-		UserId:    p.botUserID,
-		ChannelId: channelId,
-		Message:   fmt.Sprintf("Meeting started at %s.", webexJoinURL),
-		Type:      "custom_webex",
-		Props: map[string]interface{}{
-			"meeting_link":     webexJoinURL,
-			"meeting_status":   meetingStatus,
-			"meeting_topic":    "Webex Meeting",
-			"starting_user_id": startedByUserId,
-		},
-	}
-
-	createdJoinPost, appErr := p.API.CreatePost(joinPost)
-	if appErr != nil {
-		return nil, nil, appErr.StatusCode, appErr
-	}
-
-	startPost := &model.Post{
-		UserId:    p.botUserID,
-		ChannelId: channelId,
-		Message:   fmt.Sprintf("To start the meeting, click here: %s.", webexStartURL),
-	}
-
-	var createdStartPost *model.Post
-	if meetingStatus == webex.StatusStarted {
-		createdStartPost = p.API.SendEphemeralPost(startedByUserId, startPost)
-	}
-
-	return createdJoinPost, createdStartPost, http.StatusOK, nil
 }
