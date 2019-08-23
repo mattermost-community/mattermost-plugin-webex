@@ -5,6 +5,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/mattermost/mattermost-plugin-webex/server/webex"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
@@ -38,14 +39,14 @@ type Plugin struct {
 
 	// KV store
 	store Store
+
+	// the http client
+	webexClient webex.Client
 }
 
 // OnActivate checks if the configurations is valid and ensures the bot account exists
 func (p *Plugin) OnActivate() error {
 	config := p.getConfiguration()
-	if err := config.IsValid(); err != nil {
-		return err
-	}
 
 	botUserID, err := p.Helpers.EnsureBot(&model.Bot{
 		Username:    botUserName,
@@ -72,6 +73,8 @@ func (p *Plugin) OnActivate() error {
 	}
 
 	p.store = NewStore(p)
+
+	p.webexClient = webex.NewClient(config.SiteHost, config.siteName)
 
 	err = p.API.RegisterCommand(getCommand())
 	if err != nil {
@@ -103,4 +106,14 @@ func (p *Plugin) infof(f string, args ...interface{}) {
 
 func (p *Plugin) errorf(f string, args ...interface{}) {
 	p.API.LogError(fmt.Sprintf(f, args...))
+}
+
+func (p *Plugin) postEphemeralError(channelId, userId, msg string) {
+	post := &model.Post{
+		UserId:    p.botUserID,
+		ChannelId: channelId,
+		Message:   msg,
+	}
+
+	_ = p.API.SendEphemeralPost(userId, post)
 }

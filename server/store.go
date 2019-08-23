@@ -75,8 +75,14 @@ func (store store) set(key string, v interface{}) (returnErr error) {
 	return nil
 }
 
-func (store store) StoreUserInfo(mattermostUserId string, info UserInfo) (returnErr error) {
-	err := store.set(hashkey(prefixUserInfo, mattermostUserId), info)
+func (store store) StoreUserInfo(mattermostUserId string, info UserInfo) error {
+	// Set the email because we need a field in the userInfo that cannot be blank (in order to tell if a user was found)
+	email, _, err := store.plugin.getEmailAndEmailName(mattermostUserId)
+	if err != nil {
+		return err
+	}
+	info.Email = email
+	err = store.set(hashkey(prefixUserInfo, mattermostUserId), info)
 	if err != nil {
 		return errors.WithMessage(err, fmt.Sprintf("failed to store UserInfo for: %s", mattermostUserId))
 
@@ -94,7 +100,7 @@ func (store store) LoadUserInfo(mattermostUserId string) (UserInfo, error) {
 			fmt.Sprintf("failed to load userInfo for mattermostUserId: %s", mattermostUserId))
 	}
 
-	if len(userInfo.RoomID) == 0 {
+	if len(userInfo.Email) == 0 {
 		return UserInfo{}, ErrUserNotFound
 	}
 

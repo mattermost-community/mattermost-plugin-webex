@@ -6,6 +6,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/mattermost/mattermost-plugin-webex/server/webex"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
@@ -31,6 +32,10 @@ func TestPlugin(t *testing.T) {
 	validMeetingRequest2 := httptest.NewRequest("POST", "/api/v1/meetings",
 		strings.NewReader("{\"channel_id\": \"thechannelid\"}"))
 	validMeetingRequest2.Header.Add("Mattermost-User-Id", "theuserid")
+
+	validMeetingRequest3 := httptest.NewRequest("POST", "/api/v1/meetings",
+		strings.NewReader("{\"channel_id\": \"thechannelid\"}"))
+	validMeetingRequest3.Header.Add("Mattermost-User-Id", "theuserid")
 
 	invalidMeetingRequestGet := httptest.NewRequest("GET", "/api/v1/meetings",
 		strings.NewReader("{\"channel_id\": \"thechannelid\"}"))
@@ -65,6 +70,12 @@ func TestPlugin(t *testing.T) {
 			ExpectedStatusCode: http.StatusInternalServerError,
 		},
 		{
+			Name:               "Invalid SiteHost set",
+			Request:            validMeetingRequest3,
+			SiteHost:           "blah.blah.webex.co",
+			ExpectedStatusCode: http.StatusInternalServerError,
+		},
+		{
 			Name:               "Invalid meeting request: using Get",
 			Request:            invalidMeetingRequestGet,
 			SiteHost:           "hostname.webex.com",
@@ -83,6 +94,7 @@ func TestPlugin(t *testing.T) {
 			api := &plugintest.API{}
 
 			api.On("GetChannelMember", "thechannelid", "theuserid").Return(&model.ChannelMember{}, nil)
+			api.On("GetUser", "theuserid").Return(&model.User{Email: "theusername@thehost.com"}, nil)
 
 			path, err := filepath.Abs("..")
 			require.Nil(t, err)
@@ -116,7 +128,7 @@ func TestPlugin(t *testing.T) {
 				mock.AnythingOfTypeArgument("string"),
 				mock.AnythingOfTypeArgument("string")).Return(nil)
 
-			user, _ := json.Marshal(UserInfo{"myroom"})
+			user, _ := json.Marshal(UserInfo{"myemail", "myroom"})
 			api.On("KVGet", mock.AnythingOfTypeArgument("string")).Return(user, (*model.AppError)(nil))
 
 			api.On("CreatePost",
@@ -128,6 +140,7 @@ func TestPlugin(t *testing.T) {
 			p := Plugin{}
 			p.setConfiguration(&configuration{
 				SiteHost: tc.SiteHost,
+				siteName: parseSiteNameFromSiteHost(tc.SiteHost),
 			})
 			p.SetAPI(api)
 
@@ -139,6 +152,8 @@ func TestPlugin(t *testing.T) {
 
 			err = p.OnActivate()
 			require.Nil(t, err)
+
+			p.webexClient = webex.MockClient{SiteHost: tc.SiteHost}
 
 			w := httptest.NewRecorder()
 
@@ -157,7 +172,7 @@ func TestPlugin(t *testing.T) {
 				Type:      "custom_webex",
 				Props: map[string]interface{}{
 					"meeting_link":     webexJoinURL,
-					"meeting_status":   StatusStarted,
+					"meeting_status":   webex.StatusStarted,
 					"meeting_topic":    "Webex Meeting",
 					"starting_user_id": "theuserid",
 				},
