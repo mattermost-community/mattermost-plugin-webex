@@ -65,7 +65,7 @@ func (p *Plugin) handleStartMeeting(w http.ResponseWriter, r *http.Request) (int
 	}
 
 	if !p.getConfiguration().IsValid() {
-		return http.StatusInternalServerError, errors.New("Unable to setup a meeting; the Webex plugin has not been configured correctly.")
+		return http.StatusInternalServerError, errors.New("Unable to setup a meeting; the Webex plugin has not been configured correctly.  Please speak with your Mattermost administrator.")
 	}
 
 	var req startMeetingRequest
