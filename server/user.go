@@ -56,9 +56,9 @@ func (p *Plugin) getUrlFromRoom(mattermostUserId string) (string, error) {
 		return "", errors.New(fmt.Sprintf("error getting your room from the store, please contact your system administrator. Error: %v", err))
 	}
 
-	roomUrl, cerr := p.webexClient.GetPersonalMeetingRoomUrl(userInfo.RoomID, "", "")
-	if cerr != nil {
-		return "", cerr
+	roomUrl, err := p.webexClient.GetPersonalMeetingRoomUrl(userInfo.RoomID, "", "")
+	if err != nil {
+		return "", err
 	}
 
 	return roomUrl, nil
@@ -69,9 +69,9 @@ func (p *Plugin) getUrlFromEmail(mattermostUserId string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	roomUrl, cerr := p.webexClient.GetPersonalMeetingRoomUrl("", emailName, email)
-	if cerr != nil {
-		return "", cerr.Err
+	roomUrl, err := p.webexClient.GetPersonalMeetingRoomUrl("", emailName, email)
+	if err != nil {
+		return "", err
 	}
 
 	return roomUrl, nil
@@ -112,8 +112,8 @@ func (p *Plugin) getRoomUrl(mattermostUserId string) (string, error) {
 	roomId, err := p.getRoom(mattermostUserId)
 	if err == nil && roomId != "" {
 		// Look for their url using roomId
-		roomUrl, err := p.getUrlFromRoom(mattermostUserId)
-		if err != nil {
+		roomUrl, err2 := p.getUrlFromRoom(mattermostUserId)
+		if err2 != nil {
 			return "", fmt.Errorf("No Personal Room link found at `%s` for your room: `%s`", p.getConfiguration().SiteHost, roomId)
 		}
 

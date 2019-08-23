@@ -16,17 +16,8 @@ import (
 
 const StatusStarted = "STARTED"
 
-type ClientError struct {
-	StatusCode int
-	Err        error
-}
-
-func (ce *ClientError) Error() string {
-	return ce.Err.Error()
-}
-
 type Client interface {
-	GetPersonalMeetingRoomUrl(roomId, username, email string) (string, *ClientError)
+	GetPersonalMeetingRoomUrl(roomId, username, email string) (string, error)
 }
 
 // Client represents a Webex API client
@@ -52,7 +43,7 @@ func NewClient(siteHost, siteName string) Client {
 }
 
 // GetPersonalMeetingRoomUrl prefers roomId, username, and email for finding the PMR url (in that order).
-func (c *client) GetPersonalMeetingRoomUrl(roomId, username, email string) (string, *ClientError) {
+func (c *client) GetPersonalMeetingRoomUrl(roomId, username, email string) (string, error) {
 	if roomId != "" {
 		pmrUrl, err := c.getPMRFromRoomId(roomId)
 		if err == nil && pmrUrl != "" {
@@ -72,7 +63,7 @@ func (c *client) GetPersonalMeetingRoomUrl(roomId, username, email string) (stri
 		}
 	}
 
-	return "", &ClientError{500, errors.New("couldn't get PMR url")}
+	return "", errors.New("couldn't get PMR url")
 }
 
 const payloadWrapper = `<?xml version="1.0" encoding="UTF-8"?>
@@ -94,44 +85,44 @@ const webexIdContent = `<webExId>%s</webExId>`
 const emailContent = `<email>%s</email>`
 
 // getPMRFromRoomId gets a Personal Meeting Room using a roomId, or returns an error if not found
-func (c *client) getPMRFromRoomId(roomId string) (string, *ClientError) {
+func (c *client) getPMRFromRoomId(roomId string) (string, error) {
 	content := fmt.Sprintf(roomIdContent, roomId)
 	return c.getPMR(content)
 }
 
 // getPMRFromRoomId gets a Personal Meeting Room using a userName, or returns an error if not found
-func (c *client) getPMRFromUserName(userName string) (string, *ClientError) {
+func (c *client) getPMRFromUserName(userName string) (string, error) {
 	content := fmt.Sprintf(webexIdContent, userName)
 	return c.getPMR(content)
 }
 
 // getPMRFromRoomId gets a Personal Meeting Room using an email, or returns an error if not found
-func (c *client) getPMRFromEmail(email string) (string, *ClientError) {
+func (c *client) getPMRFromEmail(email string) (string, error) {
 	content := fmt.Sprintf(emailContent, email)
 	return c.getPMR(content)
 }
 
 // getPMR gets a Personal Meeting Room given the body content
-func (c *client) getPMR(content string) (string, *ClientError) {
+func (c *client) getPMR(content string) (string, error) {
 	payload := fmt.Sprintf(payloadWrapper, c.siteName, content)
-	buf, cerr := c.request(payload)
-	if cerr != nil {
-		return "", cerr
+	buf, err := c.roundTrip(payload)
+	if err != nil {
+		return "", err
 	}
 
 	var message GetPMRR
-	err := xml.Unmarshal(buf.Bytes(), &message)
+	err = xml.Unmarshal(buf.Bytes(), &message)
 	if err != nil {
-		return "", &ClientError{http.StatusInternalServerError, err}
+		return "", err
 	}
 
 	return message.Body.BodyContent.PersonalMeetingRoom.PMRUrl, nil
 }
 
-func (c *client) request(payload string) (*bytes.Buffer, *ClientError) {
+func (c *client) roundTrip(payload string) (*bytes.Buffer, error) {
 	rq, err := http.NewRequest("POST", c.xmlURL, bytes.NewReader([]byte(payload)))
 	if err != nil {
-		return nil, &ClientError{http.StatusInternalServerError, err}
+		return nil, err
 	}
 	rq.Header.Set("Content-Type", "text/xml")
 	rq.Close = true
@@ -139,34 +130,21 @@ func (c *client) request(payload string) (*bytes.Buffer, *ClientError) {
 	rp, err := c.httpClient.Do(rq)
 
 	if err != nil {
-		return nil, &ClientError{
-			http.StatusInternalServerError,
-			errors.WithMessagef(err, "failed request to %v", c.xmlURL),
-		}
-	}
-
-	if rp == nil {
-		return nil, &ClientError{
-			http.StatusInternalServerError,
-			errors.Errorf("received nil response when making request to %v", c.xmlURL),
-		}
+		return nil, errors.WithMessagef(err, "failed request to %v", c.xmlURL)
+	} else if rp == nil {
+		return nil, errors.Errorf("received nil response when making request to %v", c.xmlURL)
 	}
 
 	defer closeBody(rp)
 
 	if rp.StatusCode >= 300 {
-		return nil, &ClientError{
-			rp.StatusCode,
-			errors.New("Received status code above 300")}
+		return nil, errors.New("Received status code above 300")
 	}
 
 	buf := new(bytes.Buffer)
 	_, err = buf.ReadFrom(rp.Body)
 	if err != nil {
-		return nil, &ClientError{
-			http.StatusInternalServerError,
-			errors.Errorf("Failed to read response from %v", c.xmlURL),
-		}
+		return nil, errors.Errorf("Failed to read response from %v", c.xmlURL)
 	}
 
 	return buf, nil
@@ -184,6 +162,6 @@ type MockClient struct {
 	SiteHost string
 }
 
-func (mc MockClient) GetPersonalMeetingRoomUrl(roomId, username, email string) (string, *ClientError) {
+func (mc MockClient) GetPersonalMeetingRoomUrl(roomId, username, email string) (string, error) {
 	return "https://" + mc.SiteHost + "/meet/" + roomId, nil
 }

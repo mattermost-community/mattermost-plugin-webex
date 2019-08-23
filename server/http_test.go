@@ -153,7 +153,7 @@ func TestPlugin(t *testing.T) {
 			err = p.OnActivate()
 			require.Nil(t, err)
 
-			p.webexClient = webex.MockClient{tc.SiteHost}
+			p.webexClient = webex.MockClient{SiteHost: tc.SiteHost}
 
 			w := httptest.NewRecorder()
 
