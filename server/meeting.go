@@ -80,9 +80,9 @@ func (p *Plugin) getUrlFromRoomId(roomId string) (string, error) {
 }
 
 func (p *Plugin) getUrlFromNameOrEmail(emailName, email string) (string, error) {
-	roomUrl, cerr := p.webexClient.GetPersonalMeetingRoomUrl("", emailName, email)
-	if cerr != nil {
-		return "", cerr.Err
+	roomUrl, err := p.webexClient.GetPersonalMeetingRoomUrl("", emailName, email)
+	if err != nil {
+		return "", err
 	}
 
 	return roomUrl, nil

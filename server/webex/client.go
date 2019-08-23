@@ -166,7 +166,7 @@ type MockClient struct {
 	SiteHost string
 }
 
-func (mc MockClient) GetPersonalMeetingRoomUrl(roomId, username, email string) (string, *ClientError) {
+func (mc MockClient) GetPersonalMeetingRoomUrl(roomId, username, email string) (string, error) {
 	room := roomId
 	if room == "" {
 		room = username
