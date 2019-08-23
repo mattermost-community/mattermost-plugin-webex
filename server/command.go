@@ -112,7 +112,7 @@ func executeRoom(p *Plugin, c *plugin.Context, header *model.CommandArgs, args .
 	err = p.store.StoreUserInfo(header.UserId, userInfo)
 	if err != nil {
 		p.errorf("error in executeRoom: %v", err)
-		return p.responsef(header, "error storing user info, please contact your system administrator")
+		return p.responsef(header, "Error storing user info, please contact your system administrator")
 	}
 
 	return p.responsef(header, "Room is set to: `%v`", userInfo.RoomID)
@@ -124,7 +124,7 @@ func executeRoomReset(p *Plugin, c *plugin.Context, header *model.CommandArgs, a
 	err := p.store.StoreUserInfo(header.UserId, userInfo)
 	if err != nil {
 		p.errorf("error in executeRoom: %v", err)
-		return p.responsef(header, "error storing user info, please contact your system administrator")
+		return p.responsef(header, "Error storing user info, please contact your system administrator")
 	}
 
 	return p.responsef(header, "Room is set to: `<not set>`")
