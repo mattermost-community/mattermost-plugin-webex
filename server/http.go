@@ -77,7 +77,7 @@ func (p *Plugin) handleStartMeeting(w http.ResponseWriter, r *http.Request) (int
 	}
 
 	if !p.getConfiguration().IsValid() {
-		return http.StatusInternalServerError, errors.New("Unable to setup a meeting; the Webex plugin has not been configured correctly. Please contact your system administrator.")
+		return http.StatusInternalServerError, errors.New("Unable to setup a meeting; the Webex plugin has not been configured correctly. Please speak with your Mattermost administrator.")
 	}
 
 	createdJoinPost, _, status, err := p.startMeeting(userId, userId, req.ChannelID, webex.StatusStarted)
