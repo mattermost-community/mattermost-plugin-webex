@@ -10,7 +10,7 @@ import (
 const helpText = "###### Mattermost Webex Plugin - Slash Command Help\n" +
 	"* `/webex help` - This help text\n" +
 	"* `/webex info` - Display your current settings\n" +
-	"* `/webex room <room id>` - Sets your personal Room ID. Meetings you start will use this ID. This setting is required only if your Webex account email address is different from your Mattermost account email address, or if the username of your email does not match your Personal Room ID or User name on your Webex site.\n" +
+	"* `/webex room <room id>` - Sets your Personal Meeting Room ID. Meetings you start will use this ID. This setting is required only if your Webex account email address is different from your Mattermost account email address, or if the username of your email does not match your Personal Meeting Room ID or User name on your Webex site.\n" +
 	"* `/webex room-reset` - Removes your room setting."
 
 type CommandHandlerFunc func(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse
