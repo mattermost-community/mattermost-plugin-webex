@@ -82,7 +82,6 @@ func (p *Plugin) handleStartMeeting(w http.ResponseWriter, r *http.Request) (int
 
 	createdJoinPost, _, status, err := p.startMeeting(userId, userId, req.ChannelID, webex.StatusStarted)
 	if err != nil {
-		p.postEphemeralError(req.ChannelID, userId, err.Error())
 		return status, err
 	}
 
