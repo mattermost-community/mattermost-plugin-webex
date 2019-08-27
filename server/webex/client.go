@@ -10,7 +10,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"regexp"
+	"strings"
 
 	"github.com/pkg/errors"
 )
@@ -179,11 +179,9 @@ func (mc MockClient) GetPersonalMeetingRoomUrl(roomId, username, email string) (
 
 // only for testing
 func getUserFromEmail(email string) string {
-	rexp := regexp.MustCompile("^(.*)@")
-	matches := rexp.FindStringSubmatch(email)
-	if matches == nil || matches[1] == "" {
+	ss := strings.Split(email, "@")
+	if len(ss) != 2 {
 		return ""
 	}
-
-	return matches[1]
+	return ss[0]
 }

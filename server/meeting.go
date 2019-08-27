@@ -8,58 +8,66 @@ import (
 	"strings"
 )
 
-// startMeeting can be used by the `/webex start` slash command or the http handleStartMeeting
+type meetingDetails struct {
+	startedByUserId     string
+	meetingRoomOfUserId string
+	channelId           string
+	meetingStatus       string
+	roomUrl             string
+}
+
+type meetingPosts struct {
+	createdJoinPost  *model.Post
+	createdStartPost *model.Post
+}
+
+// startMeeting starts a meeting using details.meetingRoomOfUserId's room
 // returns the joinPost, startPost, http status code and a descriptive error
-func (p *Plugin) startMeeting(startedByUserId, meetingRoomOfUserId, channelId, meetingStatus string) (*model.Post, *model.Post, int, error) {
-	roomUrl, err := p.getRoomUrlFromMMId(meetingRoomOfUserId)
+func (p *Plugin) startMeeting(details meetingDetails) (*meetingPosts, int, error) {
+	roomUrl, err := p.getRoomUrlFromMMId(details.meetingRoomOfUserId)
 	if err != nil {
-		return nil, nil, http.StatusBadRequest, err
+		return nil, http.StatusBadRequest, err
 	}
 
-	return p.startMeetingFromRoomUrl(roomUrl, startedByUserId, channelId, meetingStatus)
+	details.roomUrl = roomUrl
+	return p.startMeetingFromRoomUrl(details)
 }
 
-func (p *Plugin) startMeetingForUserId(header *model.CommandArgs, startedByUserId, meetingRoomOfUserId, meetingStatus string) error {
-	if _, _, _, err := p.startMeeting(startedByUserId, meetingRoomOfUserId, header.ChannelId, meetingStatus); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (p *Plugin) startMeetingFromRoomUrl(roomUrl, startedByUserId, channelId, meetingStatus string) (*model.Post, *model.Post, int, error) {
-	webexJoinURL := p.makeJoinUrl(roomUrl)
-	webexStartURL := p.makeStartUrl(roomUrl)
+// startMeetingFromRoomUrl starts a meeting using details.roomUrl, ignoring details.meetingRoomOfUserId
+func (p *Plugin) startMeetingFromRoomUrl(details meetingDetails) (*meetingPosts, int, error) {
+	webexJoinURL := p.makeJoinUrl(details.roomUrl)
+	webexStartURL := p.makeStartUrl(details.roomUrl)
 
 	joinPost := &model.Post{
 		UserId:    p.botUserID,
-		ChannelId: channelId,
+		ChannelId: details.channelId,
 		Message:   fmt.Sprintf("Meeting started at %s.", webexJoinURL),
 		Type:      "custom_webex",
 		Props: map[string]interface{}{
 			"meeting_link":     webexJoinURL,
-			"meeting_status":   meetingStatus,
+			"meeting_status":   details.meetingStatus,
 			"meeting_topic":    "Webex Meeting",
-			"starting_user_id": startedByUserId,
+			"starting_user_id": details.startedByUserId,
 		},
 	}
 
 	createdJoinPost, appErr := p.API.CreatePost(joinPost)
 	if appErr != nil {
-		return nil, nil, appErr.StatusCode, appErr
+		return nil, appErr.StatusCode, appErr
 	}
 
 	startPost := &model.Post{
 		UserId:    p.botUserID,
-		ChannelId: channelId,
+		ChannelId: details.channelId,
 		Message:   fmt.Sprintf("To start the meeting, click here: %s.", webexStartURL),
 	}
 
 	var createdStartPost *model.Post
-	if meetingStatus == webex.StatusStarted {
-		createdStartPost = p.API.SendEphemeralPost(startedByUserId, startPost)
+	if details.meetingStatus == webex.StatusStarted {
+		createdStartPost = p.API.SendEphemeralPost(details.startedByUserId, startPost)
 	}
 
-	return createdJoinPost, createdStartPost, http.StatusOK, nil
+	return &meetingPosts{createdJoinPost, createdStartPost}, http.StatusOK, nil
 }
 
 func (p *Plugin) makeJoinUrl(meetingUrl string) string {

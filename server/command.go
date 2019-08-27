@@ -12,8 +12,8 @@ const helpText = "###### Mattermost Webex Plugin - Slash Command Help\n" +
 	"* `/webex help` - This help text\n" +
 	"* `/webex info` - Display your current settings\n" +
 	"* `/webex start` - Start a Webex meeting in your room\n" +
-	"* `/webex <room id>` - Shares a Join Meeting button for the Webex Personal Room meeting that is associated with the specified Personal Room ID, whether it’s your Personal Meeting Room ID or someone else’s.\n" +
-	"* `/webex <@username>` - Shares a Join Meeting button for the Webex Personal Room meeting that is associated with that Mattermost team member.\n" +
+	"* `/webex <room id>` - Shares a Join Meeting link for the Webex Personal Room meeting that is associated with the specified Personal Room ID, whether it’s your Personal Meeting Room ID or someone else’s.\n" +
+	"* `/webex <@username>` - Shares a Join Meeting link for the Webex Personal Room meeting that is associated with that Mattermost team member.\n" +
 	"###### Room Settings\n" +
 	"* `/webex room <room id>` - Sets your personal Meeting Room ID. Meetings you start will use this ID. This setting is required only if your Webex account email address is different from your Mattermost account email address, or if the username of your email does not match your Personal Meeting Room ID or User name on your Webex site.\n" +
 	"* `/webex room-reset` - Removes your room setting."
@@ -132,7 +132,7 @@ func executeRoomReset(p *Plugin, c *plugin.Context, header *model.CommandArgs, a
 
 func executeInfo(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
 	roomId, err := p.getRoom(header.UserId)
-	if err != nil {
+	if err != nil && err != ErrUserNotFound {
 		return p.responsef(header, err.Error())
 	}
 	if roomId == "" {
@@ -147,7 +147,13 @@ func executeStart(p *Plugin, c *plugin.Context, header *model.CommandArgs, args 
 		return p.responsef(header, "Unable to setup a meeting; the Webex plugin has not been configured correctly. Please contact your system administrator.")
 	}
 
-	if err := p.startMeetingForUserId(header, header.UserId, header.UserId, webex.StatusStarted); err != nil {
+	details := meetingDetails{
+		startedByUserId:     header.UserId,
+		meetingRoomOfUserId: header.UserId,
+		channelId:           header.ChannelId,
+		meetingStatus:       webex.StatusStarted,
+	}
+	if _, _, err := p.startMeeting(details); err != nil {
 		return p.responsef(header, err.Error())
 	}
 	return &model.CommandResponse{}
@@ -163,6 +169,12 @@ func executeStartWithArg(p *Plugin, c *plugin.Context, header *model.CommandArgs
 		return p.responsef(header, "Unable to setup a meeting; the Webex plugin has not been configured correctly. Please contact your system administrator.")
 	}
 
+	details := meetingDetails{
+		startedByUserId: header.UserId,
+		channelId:       header.ChannelId,
+		meetingStatus:   webex.StatusInvited,
+	}
+
 	arg := args[0]
 	if strings.HasPrefix(arg, "@") {
 		// we were given a user
@@ -170,7 +182,8 @@ func executeStartWithArg(p *Plugin, c *plugin.Context, header *model.CommandArgs
 		if appErr != nil {
 			return p.responsef(header, "Could not find the user `%s`. Please make sure you typed the name correctly and try again.", arg)
 		}
-		if err := p.startMeetingForUserId(header, header.UserId, user.Id, webex.StatusInvited); err != nil {
+		details.meetingRoomOfUserId = user.Id
+		if _, _, err := p.startMeeting(details); err != nil {
 			return p.responsef(header, "Unable to create a meeting at `%s` for user: `%s`. They may not have their roomId set correctly, or their Mattermost email is not the same as their Webex email.", p.getConfiguration().SiteHost, arg)
 		}
 		return &model.CommandResponse{}
@@ -182,7 +195,8 @@ func executeStartWithArg(p *Plugin, c *plugin.Context, header *model.CommandArgs
 		return p.responsef(header, "No Personal Room link found at `%s` for the room: `%s`", p.getConfiguration().SiteHost, arg)
 	}
 
-	_, _, _, err = p.startMeetingFromRoomUrl(roomUrl, header.UserId, header.ChannelId, webex.StatusInvited)
+	details.roomUrl = roomUrl
+	_, _, err = p.startMeetingFromRoomUrl(details)
 	if err != nil {
 		p.errorf("executeStartWithArg - Error creating the invitation posts, err: %v", err)
 		return p.responsef(header, "Failed to make the invitation post. Please contact your system administrator.")

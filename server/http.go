@@ -80,12 +80,19 @@ func (p *Plugin) handleStartMeeting(w http.ResponseWriter, r *http.Request) (int
 		return http.StatusInternalServerError, errors.New("Unable to setup a meeting; the Webex plugin has not been configured correctly. Please speak with your Mattermost administrator.")
 	}
 
-	createdJoinPost, _, status, err := p.startMeeting(userId, userId, req.ChannelID, webex.StatusStarted)
+	details := meetingDetails{
+		startedByUserId:     userId,
+		meetingRoomOfUserId: userId,
+		channelId:           req.ChannelID,
+		meetingStatus:       webex.StatusStarted,
+	}
+
+	posts, status, err := p.startMeeting(details)
 	if err != nil {
 		return status, err
 	}
 
-	if _, err := w.Write([]byte(fmt.Sprintf("%v", createdJoinPost.Id))); err != nil {
+	if _, err := w.Write([]byte(fmt.Sprintf("%v", posts.createdJoinPost.Id))); err != nil {
 		p.API.LogWarn("failed to write response", "error", err.Error())
 	}
 
