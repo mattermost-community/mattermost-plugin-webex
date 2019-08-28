@@ -10,11 +10,15 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/pkg/errors"
 )
 
-const StatusStarted = "STARTED"
+const (
+	StatusStarted = "STARTED"
+	StatusInvited = "INVITED"
+)
 
 type Client interface {
 	GetPersonalMeetingRoomUrl(roomId, username, email string) (string, error)
@@ -163,5 +167,21 @@ type MockClient struct {
 }
 
 func (mc MockClient) GetPersonalMeetingRoomUrl(roomId, username, email string) (string, error) {
-	return "https://" + mc.SiteHost + "/meet/" + roomId, nil
+	room := roomId
+	if room == "" {
+		room = username
+	}
+	if room == "" {
+		room = getUserFromEmail(email)
+	}
+	return "https://" + mc.SiteHost + "/meet/" + room, nil
+}
+
+// only for testing
+func getUserFromEmail(email string) string {
+	ss := strings.Split(email, "@")
+	if len(ss) != 2 {
+		return ""
+	}
+	return ss[0]
 }

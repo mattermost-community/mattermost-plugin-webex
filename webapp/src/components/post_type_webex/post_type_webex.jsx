@@ -60,11 +60,13 @@ export default class PostTypeWebex extends React.PureComponent {
         const post = this.props.post;
         const props = post.props || {};
 
-        let preText;
         let content;
         let subtitle;
-        if (props.meeting_status === 'STARTED') {
-            preText = `${this.props.creatorName} has started a meeting`;
+        let preText = `${this.props.creatorName} has started a meeting`;
+        if (props.meeting_status === 'INVITED') {
+            preText = `${this.props.creatorName} has invited you to a meeting`;
+        }
+        if (props.meeting_status === 'STARTED' || props.meeting_status === 'INVITED') {
             content = (
                 <a
                     className='btn btn-lg btn-primary'

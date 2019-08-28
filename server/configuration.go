@@ -41,7 +41,8 @@ func (c *configuration) Clone() *configuration {
 
 // IsValid checks if all needed fields are set.
 func (c *configuration) IsValid() bool {
-	return isValidHostName(c.SiteHost)
+	// If we can't get the site name from the siteHost, then the site host has not been correctly set.
+	return parseSiteNameFromSiteHost(c.SiteHost) != ""
 }
 
 // getConfiguration retrieves the active configuration under lock, making it safe to use
@@ -129,8 +130,4 @@ func parseSiteNameFromSiteHost(siteHost string) string {
 		return matches[1]
 	}
 	return ""
-}
-
-func isValidHostName(hostName string) bool {
-	return parseSiteNameFromSiteHost(hostName) != ""
 }

@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/mattermost/mattermost-plugin-webex/server/webex"
-	"github.com/mattermost/mattermost-server/model"
 	"github.com/mattermost/mattermost-server/plugin"
 	"net/http"
 	"strconv"
@@ -64,10 +63,6 @@ func (p *Plugin) handleStartMeeting(w http.ResponseWriter, r *http.Request) (int
 		return http.StatusUnauthorized, errors.New("not authorized")
 	}
 
-	if !p.getConfiguration().IsValid() {
-		return http.StatusInternalServerError, errors.New("Unable to setup a meeting; the Webex plugin has not been configured correctly.  Please speak with your Mattermost administrator.")
-	}
-
 	var req startMeetingRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return http.StatusBadRequest, fmt.Errorf("err: %v", err)
@@ -81,44 +76,25 @@ func (p *Plugin) handleStartMeeting(w http.ResponseWriter, r *http.Request) (int
 		return http.StatusForbidden, errors.New("forbidden")
 	}
 
-	roomUrl, err := p.getRoomUrl(userId)
+	if !p.getConfiguration().IsValid() {
+		return http.StatusInternalServerError, errors.New("Unable to setup a meeting; the Webex plugin has not been configured correctly. Please speak with your Mattermost administrator.")
+	}
+
+	details := meetingDetails{
+		startedByUserId:     userId,
+		meetingRoomOfUserId: userId,
+		channelId:           req.ChannelID,
+		meetingStatus:       webex.StatusStarted,
+	}
+
+	posts, status, err := p.startMeeting(details)
 	if err != nil {
-		p.postEphemeralError(req.ChannelID, userId, err.Error())
-		return http.StatusBadRequest, nil
+		return status, err
 	}
 
-	webexJoinURL := p.makeJoinUrl(roomUrl)
-	webexStartURL := p.makeStartUrl(roomUrl)
-
-	joinPost := &model.Post{
-		UserId:    p.botUserID,
-		ChannelId: req.ChannelID,
-		Message:   fmt.Sprintf("Meeting started at %s.", webexJoinURL),
-		Type:      "custom_webex",
-		Props: map[string]interface{}{
-			"meeting_link":     webexJoinURL,
-			"meeting_status":   webex.StatusStarted,
-			"meeting_topic":    "Webex Meeting",
-			"starting_user_id": userId,
-		},
-	}
-
-	createdPost, appErr := p.API.CreatePost(joinPost)
-	if appErr != nil {
-		return appErr.StatusCode, appErr
-	}
-
-	startPost := &model.Post{
-		UserId:    p.botUserID,
-		ChannelId: req.ChannelID,
-		Message:   fmt.Sprintf("To start the meeting, click here: %s.", webexStartURL),
-	}
-
-	_ = p.API.SendEphemeralPost(userId, startPost)
-
-	if _, err := w.Write([]byte(fmt.Sprintf("%v", createdPost.Id))); err != nil {
+	if _, err := w.Write([]byte(fmt.Sprintf("%v", posts.createdJoinPost.Id))); err != nil {
 		p.API.LogWarn("failed to write response", "error", err.Error())
 	}
 
-	return http.StatusOK, nil
+	return status, nil
 }
