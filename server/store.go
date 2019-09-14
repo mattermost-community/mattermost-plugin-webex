@@ -30,21 +30,14 @@ func hashkey(prefix, key string) string {
 	return fmt.Sprintf("%s%x", prefix, h.Sum(nil))
 }
 
-func (store store) get(key string, v interface{}) (returnErr error) {
-	defer func() {
-		if returnErr == nil {
-			return
-		}
-		returnErr = errors.WithMessage(returnErr, "failed to get from store")
-	}()
-
+func (store store) get(key string, v interface{}) error {
 	data, appErr := store.plugin.API.KVGet(key)
 	if appErr != nil {
-		return appErr
+		return errors.New(appErr.Error())
 	}
 
 	if data == nil {
-		return nil
+		return errors.New("not found")
 	}
 
 	err := json.Unmarshal(data, v)
@@ -55,14 +48,7 @@ func (store store) get(key string, v interface{}) (returnErr error) {
 	return nil
 }
 
-func (store store) set(key string, v interface{}) (returnErr error) {
-	defer func() {
-		if returnErr == nil {
-			return
-		}
-		returnErr = errors.WithMessage(returnErr, "failed to store")
-	}()
-
+func (store store) set(key string, v interface{}) error {
 	data, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -70,7 +56,7 @@ func (store store) set(key string, v interface{}) (returnErr error) {
 
 	appErr := store.plugin.API.KVSet(key, data)
 	if appErr != nil {
-		return appErr
+		return errors.New(appErr.Error())
 	}
 	return nil
 }
