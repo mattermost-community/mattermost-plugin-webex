@@ -18,6 +18,8 @@ const helpText = "###### Mattermost Webex Plugin - Slash Command Help\n" +
 	"* `/webex room <room id>` - Sets your personal Meeting Room ID. Meetings you start will use this ID. This setting is required only if your Webex account email address is different from your Mattermost account email address, or if the username of your email does not match your Personal Meeting Room ID or User name on your Webex site.\n" +
 	"* `/webex room-reset` - Removes your room setting."
 
+const defaultRoomText = "not set (using your Mattermost email as the default)"
+
 type CommandHandlerFunc func(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse
 
 type CommandHandler struct {
@@ -60,6 +62,11 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, commandArgs *model.CommandArg
 	if len(args) == 0 || args[0] != "/webex" {
 		return p.help(commandArgs), nil
 	}
+
+	if !p.getConfiguration().IsValid() {
+		return p.responsef(commandArgs, "The Webex plugin has not been configured correctly: the sitename has not been set. Please contact your system administrator."), nil
+	}
+
 	return webexCommandHandler.Handle(p, c, commandArgs, args[1:]...), nil
 }
 
@@ -100,7 +107,7 @@ func executeRoom(p *Plugin, c *plugin.Context, header *model.CommandArgs, args .
 		return p.responsef(header, err.Error())
 	}
 	if roomId == "" {
-		roomId = "<not set>"
+		roomId = defaultRoomText
 	}
 
 	if len(args) != 1 {
@@ -127,26 +134,23 @@ func executeRoomReset(p *Plugin, c *plugin.Context, header *model.CommandArgs, a
 		return p.responsef(header, "Error storing user info, please contact your system administrator")
 	}
 
-	return p.responsef(header, "Room is set to: `<not set>`")
+	return p.responsef(header, "Room is set to: `%s`", defaultRoomText)
 }
 
 func executeInfo(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
 	roomId, err := p.getRoom(header.UserId)
 	if err != nil && err != ErrUserNotFound {
+		fmt.Printf("<><> err: %+v type: %T", err, err)
 		return p.responsef(header, err.Error())
 	}
 	if roomId == "" {
-		roomId = "<not set>"
+		roomId = defaultRoomText
 	}
 
 	return p.responsef(header, "Webex site hostname: `%s`\nYour personal meeting room: `%s`", p.getConfiguration().SiteHost, roomId)
 }
 
 func executeStart(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
-	if !p.getConfiguration().IsValid() {
-		return p.responsef(header, "Unable to setup a meeting; the Webex plugin has not been configured correctly. Please contact your system administrator.")
-	}
-
 	details := meetingDetails{
 		startedByUserId:     header.UserId,
 		meetingRoomOfUserId: header.UserId,
@@ -163,10 +167,6 @@ func executeStart(p *Plugin, c *plugin.Context, header *model.CommandArgs, args 
 func executeStartWithArg(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
 	if len(args) != 1 {
 		return p.help(header)
-	}
-
-	if !p.getConfiguration().IsValid() {
-		return p.responsef(header, "Unable to setup a meeting; the Webex plugin has not been configured correctly. Please contact your system administrator.")
 	}
 
 	details := meetingDetails{
