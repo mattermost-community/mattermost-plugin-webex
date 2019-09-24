@@ -113,7 +113,7 @@ func (p *Plugin) getRoomUrlFromMMId(mattermostUserId string) (string, error) {
 		}
 		roomUrl, err = p.getUrlFromNameOrEmail(emailName, email)
 		if err != nil {
-			return "", fmt.Errorf("No Personal Room link found at `%s` for your userName: `%s`, or your email: `%s`", p.getConfiguration().SiteHost, emailName, email)
+			return "", fmt.Errorf("No Personal Room link found at `%s` for your userName: `%s`, or your email: `%s`. Try setting a room manually with `/webex room <room id>`.", p.getConfiguration().SiteHost, emailName, email)
 		}
 	}
 
