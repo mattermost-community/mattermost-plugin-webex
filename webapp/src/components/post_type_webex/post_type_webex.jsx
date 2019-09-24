@@ -77,7 +77,7 @@ export default class PostTypeWebex extends React.PureComponent {
                 >
                     <i
                         style={style.buttonIcon}
-                        dangerouslySetInnerHTML={{__html: Svgs.VIDEO_CAMERA_3}}
+                        dangerouslySetInnerHTML={{__html: Svgs.WEBEX_ICON}}
                     />
                     {'JOIN MEETING'}
                 </a>
