@@ -35,7 +35,7 @@ var ErrUserNotFound = errors.New("user not found")
 func (store store) get(key string, v interface{}) error {
 	data, appErr := store.plugin.API.KVGet(key)
 	if appErr != nil {
-		return errors.New(appErr.Error())
+		return appErr
 	}
 
 	if data == nil {
@@ -58,7 +58,7 @@ func (store store) set(key string, v interface{}) error {
 
 	appErr := store.plugin.API.KVSet(key, data)
 	if appErr != nil {
-		return errors.New(appErr.Error())
+		return appErr
 	}
 	return nil
 }
