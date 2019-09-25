@@ -9,23 +9,12 @@ import {Svgs} from '../constants';
 
 export default class Icon extends React.PureComponent {
     render() {
-        const style = getStyle();
-
         return (
             <span
-                style={style.iconStyle}
+                className='d-flex align-items-center overflow--ellipsis'
                 aria-hidden='true'
                 dangerouslySetInnerHTML={{__html: Svgs.WEBEX_ICON}}
             />
         );
     }
 }
-
-const getStyle = makeStyleFromTheme(() => {
-    return {
-        iconStyle: {
-            position: 'relative',
-            top: '3px',
-        },
-    };
-});
