@@ -30,21 +30,16 @@ func hashkey(prefix, key string) string {
 	return fmt.Sprintf("%s%x", prefix, h.Sum(nil))
 }
 
-func (store store) get(key string, v interface{}) (returnErr error) {
-	defer func() {
-		if returnErr == nil {
-			return
-		}
-		returnErr = errors.WithMessage(returnErr, "failed to get from store")
-	}()
+var ErrUserNotFound = errors.New("user not found")
 
+func (store store) get(key string, v interface{}) error {
 	data, appErr := store.plugin.API.KVGet(key)
 	if appErr != nil {
 		return appErr
 	}
 
 	if data == nil {
-		return nil
+		return ErrUserNotFound
 	}
 
 	err := json.Unmarshal(data, v)
@@ -55,14 +50,7 @@ func (store store) get(key string, v interface{}) (returnErr error) {
 	return nil
 }
 
-func (store store) set(key string, v interface{}) (returnErr error) {
-	defer func() {
-		if returnErr == nil {
-			return
-		}
-		returnErr = errors.WithMessage(returnErr, "failed to store")
-	}()
-
+func (store store) set(key string, v interface{}) error {
 	data, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -90,11 +78,12 @@ func (store store) StoreUserInfo(mattermostUserId string, info UserInfo) error {
 	return nil
 }
 
-var ErrUserNotFound = errors.New("user not found")
-
 func (store store) LoadUserInfo(mattermostUserId string) (UserInfo, error) {
 	userInfo := UserInfo{}
 	err := store.get(hashkey(prefixUserInfo, mattermostUserId), &userInfo)
+	if err != nil && err == ErrUserNotFound {
+		return UserInfo{}, err
+	}
 	if err != nil {
 		return UserInfo{}, errors.WithMessage(err,
 			fmt.Sprintf("failed to load userInfo for mattermostUserId: %s", mattermostUserId))

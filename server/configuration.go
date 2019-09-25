@@ -115,7 +115,7 @@ func (p *Plugin) OnConfigurationChange() error {
 }
 
 func parseHostFromUrl(url string) string {
-	r := regexp.MustCompile("^https?://(.*?)/")
+	r := regexp.MustCompile("^https?://(.*?)(/|$)")
 	matches := r.FindStringSubmatch(url)
 	if matches != nil {
 		return matches[1]
