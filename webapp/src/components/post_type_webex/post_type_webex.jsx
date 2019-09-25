@@ -69,13 +69,14 @@ export default class PostTypeWebex extends React.PureComponent {
         if (props.meeting_status === 'STARTED' || props.meeting_status === 'INVITED') {
             content = (
                 <a
-                    className='btn btn-lg btn-primary'
+                    className='btn btn-lg btn-primary d-inline-flex'
                     style={style.button}
                     rel='noopener noreferrer'
                     target='_blank'
                     href={props.meeting_link}
                 >
                     <i
+                        className='d-flex align-items-center'
                         style={style.buttonIcon}
                         dangerouslySetInnerHTML={{__html: Svgs.WEBEX_ICON}}
                     />
