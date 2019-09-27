@@ -87,8 +87,8 @@ func (p *Plugin) getUrlFromRoomId(roomId string) (string, error) {
 	return roomUrl, nil
 }
 
-func (p *Plugin) getUrlFromNameOrEmail(emailName, email string) (string, error) {
-	roomUrl, err := p.webexClient.GetPersonalMeetingRoomUrl("", emailName, email)
+func (p *Plugin) getUrlFromNameOrEmail(userName, email string) (string, error) {
+	roomUrl, err := p.webexClient.GetPersonalMeetingRoomUrl("", userName, email)
 	if err != nil {
 		return "", err
 	}
@@ -107,13 +107,13 @@ func (p *Plugin) getRoomUrlFromMMId(mattermostUserId string) (string, error) {
 		}
 	} else {
 		// Look for their url using userName or email
-		email, emailName, err := p.getEmailAndEmailName(mattermostUserId)
+		email, userName, err := p.getEmailAndUserName(mattermostUserId)
 		if err != nil {
-			return "", fmt.Errorf("Error getting email and emailName: %v", err)
+			return "", fmt.Errorf("Error getting email and Username: %v", err)
 		}
-		roomUrl, err = p.getUrlFromNameOrEmail(emailName, email)
+		roomUrl, err = p.getUrlFromNameOrEmail(userName, email)
 		if err != nil {
-			return "", fmt.Errorf("No Personal Room link found at `%s` for your userName: `%s`, or your email: `%s`. Try setting a room manually with `/webex room <room id>`.", p.getConfiguration().SiteHost, emailName, email)
+			return "", fmt.Errorf("No Personal Room link found at `%s` for your Username: `%s`, or your email: `%s`. Try setting a room manually with `/webex room <room id>`.", p.getConfiguration().SiteHost, userName, email)
 		}
 	}
 
