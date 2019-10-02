@@ -3,7 +3,7 @@
     "name": "Webex",
     "description": "Webex audio and video conferencing plugin for Mattermost.",
     "version": "0.0.1",
-    "min_server_version": "5.12.0",
+    "min_server_version": "5.11.0",
     "server": {
         "executables": {
             "linux-amd64": "server/dist/plugin-linux-amd64",
