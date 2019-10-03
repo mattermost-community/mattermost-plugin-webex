@@ -1,14 +1,37 @@
-# Mattermost Zoom Plugin ![CircleCI branch](https://img.shields.io/circleci/project/github/mattermost/mattermost-plugin-zoom/master.svg)
+# Mattermost Webex Cloud Plugin ![CircleCI branch](https://img.shields.io/circleci/project/github/mattermost/mattermost-plugin-webex/master.svg)
 
-Start and join voice calls, video calls and use screen sharing with your team members via Zoom.
+Start and join voice calls, video calls and use screen sharing with your team members via Cisco Webex Meetings.
 
-Once enabled, clicking a video icon in a Mattermost channel invites team members to join a Zoom call, hosted using the credentials of the user who initiated the call.
+Once enabled, clicking a meeting icon in a Mattermost channel invites team members to join a Webex meeting, hosted using the credentials of the user who initiated the call.
 
-![image](https://user-images.githubusercontent.com/13119842/58815561-d5164900-85f5-11e9-8e3d-e3b554a3e897.png)
+![image](https://user-images.githubusercontent.com/915956/65968532-2bff2400-e418-11e9-8479-3e43d5890862.gif)
 
-## Usage and Configuration
 
-Learn more about usage and configuration in the [Mattermost documentation](https://docs.mattermost.com/integrations/zoom.html).
+## Installation
+1. In v5.16 and above, the easiest way to install a mMattermost plugin is by clicking on the "Settings" menu button above the channel list.  Select "Plugin Marketplace", search for "Webex" and click "Install"
+
+2. Alternatively, download one of the releases from the [gitHub page](https://github.com/mattermost/mattermost-plugin-webex/releases)
+
+3. Go to Settings --> Plugins --> Upload Plugin.  Select the file you downloaded, upload it to the server. In server 5.14+, plugins will automatically be distributed across an Enterprise cluster of Mattermost servers.
+
+4. Go to settings --> PLugin Management and Enable the Webex Meeting Plugin 
+
+## Configuration
+1. Go to Settings --> Webex Plugin
+
+2. Insert the Webex Meetings URL for your organization, it is often in the format of <mycompany>.my.webex.com
+
+## Usage
+
+If you type `/webex help` in any channel conversation you will be presented with your available options.
+
+
+### Starting a Meeting
+
+There are two primary ways of initiating a new Webex Meeting from within Mattermost:
+  - Clicking the Webex Meeting Button at the top right of the channel
+  - Typing in `/webex start` in a chat window
+  
 
 ## Development
 
