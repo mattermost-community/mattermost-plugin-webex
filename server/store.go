@@ -65,7 +65,7 @@ func (store store) set(key string, v interface{}) error {
 
 func (store store) StoreUserInfo(mattermostUserId string, info UserInfo) error {
 	// Set the email because we need a field in the userInfo that cannot be blank (in order to tell if a user was found)
-	email, _, err := store.plugin.getEmailAndEmailName(mattermostUserId)
+	email, _, err := store.plugin.getEmailAndUserName(mattermostUserId)
 	if err != nil {
 		return err
 	}

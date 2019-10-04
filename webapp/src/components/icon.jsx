@@ -3,8 +3,6 @@
 
 import React from 'react';
 
-import {makeStyleFromTheme} from 'mattermost-redux/utils/theme_utils';
-
 import {Svgs} from '../constants';
 
 export default class Icon extends React.PureComponent {

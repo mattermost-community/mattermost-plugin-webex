@@ -124,14 +124,6 @@ func TestPlugin(t *testing.T) {
 			Room:               "myroom",
 		},
 		{
-			Name:               "Invalid meeting request: user has no roomId set, using their email. Invalid email.",
-			Request:            validMeetingRequest5,
-			SiteHost:           "hostname.webex.com",
-			ExpectedStatusCode: http.StatusBadRequest,
-			User:               UserInfo{Email: "myemailtestcom", RoomID: ""},
-			Room:               "myemail",
-		},
-		{
 			Name:               "Valid meeting request: user has no email, but roomId is set.",
 			Request:            validMeetingRequest6,
 			SiteHost:           "hostname.webex.com",

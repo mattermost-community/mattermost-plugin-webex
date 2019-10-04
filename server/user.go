@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"regexp"
 )
 
 type UserInfo struct {
@@ -11,39 +10,24 @@ type UserInfo struct {
 	RoomID string `json:"room_id"`
 }
 
-func (p *Plugin) getUserFromEmail(email string) (string, error) {
-	rexp := regexp.MustCompile("^(.*)@")
-	matches := rexp.FindStringSubmatch(email)
-	if matches == nil || matches[1] == "" {
-		p.errorf("Error getting userName from email address, address: %v", email)
-		return "", errors.New("error getting userName from email, please contact your system administrator")
-	}
-
-	return matches[1], nil
-}
-
-func (p *Plugin) getEmailAndEmailName(mattermostUserId string) (string, string, error) {
+func (p *Plugin) getEmailAndUserName(mattermostUserId string) (string, string, error) {
 	user, appErr := p.API.GetUser(mattermostUserId)
 	if appErr != nil {
 		p.errorf("error getting mattermost user from mattermostUserId: %s", mattermostUserId)
 		return "", "", errors.New("error getting mattermost user from mattermostUserId, please contact your system administrator")
 	}
-	emailName, err := p.getUserFromEmail(user.Email)
-	if err != nil {
-		return "", "", err
-	}
 
-	return user.Email, emailName, nil
+	return user.Email, user.Username, nil
 }
 
 func (p *Plugin) getRoomOrDefault(mattermostUserId string) (string, error) {
 	roomId, err := p.getRoom(mattermostUserId)
 	if err == ErrUserNotFound {
-		_, emailName, err2 := p.getEmailAndEmailName(mattermostUserId)
+		_, userName, err2 := p.getEmailAndUserName(mattermostUserId)
 		if err2 != nil {
 			return "", err2
 		}
-		return emailName, nil
+		return userName, nil
 	} else if err != nil {
 		return "", err
 	}
