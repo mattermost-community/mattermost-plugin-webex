@@ -1,36 +1,77 @@
 # Mattermost Webex Cloud Plugin ![CircleCI branch](https://img.shields.io/circleci/project/github/mattermost/mattermost-plugin-webex/master.svg)
 
+Mattermost Webex Cloud Plugin
 Start and join voice calls, video calls and use screen sharing with your team members via Cisco Webex Meetings.
 
-Once enabled, clicking a meeting icon in a Mattermost channel invites team members to join a Webex meeting, hosted using the credentials of the user who initiated the call.
+Once enabled, clicking a meeting icon in a Mattermost channel invites team members to join a Webex meeting, hosted using the credentials of the user who initiated the meeting.
 
 ![image](https://user-images.githubusercontent.com/915956/65968532-2bff2400-e418-11e9-8479-3e43d5890862.gif)
 
 
 ## Installation
-1. In v5.16 and above, the easiest way to install a mMattermost plugin is by clicking on the "Settings" menu button above the channel list.  Select "Plugin Marketplace", search for "Webex" and click "Install"
 
-2. Alternatively, download one of the releases from the [gitHub page](https://github.com/mattermost/mattermost-plugin-webex/releases)
+System Administrators need to install the Webex plugin on the Mattermost server to make this functionality available to Mattermost end-users.
 
-3. Go to Settings --> Plugins --> Upload Plugin.  Select the file you downloaded, upload it to the server. In server 5.14+, plugins will automatically be distributed across an Enterprise cluster of Mattermost servers.
+### Plugin Installation via Marketplace
+In Mattermost version 5.16 and above, the easiest way to install a Mattermost plugin is by clicking on the "Settings" menu button above the channel list. Select "Plugin Marketplace", search for "Webex" and click "Install"
 
-4. Go to settings --> PLugin Management and Enable the Webex Meeting Plugin 
+### Manual Plugin Installation via Upload
+Alternatively, download one of the binary releases from the GitHub page for the webex plugin
+
+1. Go to Settings --> Plugins --> Upload Plugin. Select the file you downloaded, upload it to the server. In server 5.14+, plugins will automatically be distributed across an Enterprise cluster of Mattermost servers, prior to v5.14 you will need to deploy the plugin on each server manually.
+
+2. Go to settings --> Plugin Management and Enable the Webex Meeting Plugin
 
 ## Configuration
-1. Go to Settings --> Webex Plugin
+Go to Settings --> Scroll down to the Plugins section, and click on Webex Plugin
 
-2. Insert the Webex Meetings URL for your organization, it is often in the format of <mycompany>.my.webex.com
+Insert the Webex Meetings URL for your organization. It is often in the format of <companyname>.my.webex.com or <companyname>.webex.com.
 
 ## Usage
-
-If you type `/webex help` in any channel conversation you will be presented with your available options.
-
+Easily start and join Webex meetings directly from Mattermost
 
 ### Starting a Meeting
+There are two methods to initiate a new Webex Meeting from within Mattermost:
 
-There are two primary ways of initiating a new Webex Meeting from within Mattermost:
-  - Clicking the Webex Meeting Button at the top right of the channel
-  - Typing in `/webex start` in a chat window
+1. Clicking the Webex Meeting Button at the top right of the channel 
+2. by typing /webex start and pressing 'enter' in a chat window
+
+
+### Joining a Meeting from a channel
+If you are the meeting organizer and want to start the meeting for other participants, click on the link that is shown below the "Join Meeting" button. This link brings you directly to the meeting and will ask you to login to Webex if you haven't already.
+
+If you are joining a meeting as a participant, you will only see the "Join Meeting" button in your channel. simply click it to be brought to the Webex meeting.
+
+After initiating a meeting, if you are the organizer - you will see a second link to start the meeting.
+
+### Advanced Options - Sharing Meetings on behalf of others
+
+/webex <room id> - Shares a Join Meeting link for the Webex Personal Room meeting that is associated with the specified Personal Room ID, whether it’s your Personal Meeting Room ID or someone else’s.
+
+/webex <@mattermost_username> - Shares a Join Meeting link for the Webex Personal Room meeting that is associated with that Mattermost team member.
+
+If you type /webex help in any channel conversation you will be presented with your available options.
+
+
+### If your email address for webex login is different than your mattermost login email
+In some cases, you may need to configure your Webex username manually
+By default, the Webex plugin will use the email associated with your Mattermost account to setup new meetings. Sometimes, users will use a different email address to login to Webex than they use to login to Mattermost. In this case, you will need to configure the Webex plugin to use the email address associated with your Webex account to setup meetings.
+
+If your email or username is different between your Webex and Mattermost accounts - you may encounter this error:
+
+`No Personal Room link found at <mycompany>.my.webex.com for your userName: bob, or your email: bob@bob.com. Try setting a room manually with /webex room <room id>.`
+
+This error indicates you need to configure your personal room id
+To use a specific Webex account instead of suing your email address from Mattermost - Type /webex room <room id> - Where <room id> is your Webex room id. Meetings you start will use this ID. This Webex Room ID can be found by:
+
+1. Logging in to your Webex account
+2. On the home screen you will see a URL with a username within it ('camille' highlighted in red here as an example).  That username is what you will enter as <room id>.
+
+This setting is required only if your Webex account email address is different from your Mattermost account email address, or if the username of your email does not match your Personal Meeting Room ID or User name on your Webex site.
+
+If anything changes in the future, and your email with Mattermost and Webex get changed, you can reset the room ID using /webex room-reset
+
+To display your current username settings, simply type /webex info
   
 
 ## Development
