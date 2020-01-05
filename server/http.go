@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/mattermost/mattermost-plugin-webex/server/webex"
-	"github.com/mattermost/mattermost-server/plugin"
+	"github.com/mattermost/mattermost-server/v5/plugin"
 	"net/http"
 	"strconv"
 )
