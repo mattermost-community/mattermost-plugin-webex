@@ -26,7 +26,7 @@ Alternatively, download one of the binary releases from the GitHub page for the 
 ## Configuration
 Go to Settings --> Scroll down to the Plugins section, and click on Webex Plugin
 
-Insert the Webex Meetings URL for your organization. It is often in the format of <companyname>.my.webex.com or <companyname>.webex.com.
+Insert the Webex Meetings URL for your organization. It is often in the format of `<companyname>.my.webex.com` or `<companyname>.webex.com`.
 
 ## Usage
 Easily start and join Webex meetings directly from Mattermost
@@ -54,7 +54,7 @@ After initiating a meeting, if you are the organizer - you will see a second lin
 If you type `/webex help` in any channel conversation you will be presented with your available options.
 
 
-### If your email address for Webex login is different than your mattermost login email
+### If your email address for Webex login is different than your Mattermost login email address
 In some cases, you may need to configure your Webex username manually.
 By default, the Webex plugin will use the email address associated with your Mattermost account to setup new meetings. Sometimes, users will use a different email address to login to Webex than they use to login to Mattermost. In this case, you will need to configure the Webex plugin to use the email address associated with your Webex account to setup meetings.
 
