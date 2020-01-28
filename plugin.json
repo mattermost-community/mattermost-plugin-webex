@@ -2,6 +2,9 @@
     "id": "com.mattermost.webex",
     "name": "Webex",
     "description": "Webex audio and video conferencing plugin for Mattermost.",
+    "homepage_url": "https://github.com/mattermost/mattermost-plugin-webex",
+    "support_url": "https://github.com/mattermost/mattermost-plugin-webex/issues",
+    "icon_path": "assets/icon.svg",
     "version": "1.0.1",
     "min_server_version": "5.11.0",
     "server": {
