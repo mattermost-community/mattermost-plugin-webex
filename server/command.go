@@ -16,7 +16,7 @@ const helpText = "###### Mattermost Webex Plugin - Slash Command Help\n" +
 	"* `/webex <@username>` - Shares a Join Meeting link for the Webex Personal Room meeting that is associated with that Mattermost team member.\n" +
 	"###### Room Settings\n" +
 	"* `/webex room <room id>` - Sets your personal Meeting Room ID. Meetings you start will use this ID. This setting is required only if your Webex account email address is different from your Mattermost account email address, or if the username of your email does not match your Personal Meeting Room ID or User name on your Webex site.\n" +
-	"* `/webex room-reset` - Removes your room setting."
+	"* `/webex room-reset` or `reset-room` - Removes your room setting."
 
 const defaultRoomText = "not set (using your Mattermost email as the default)"
 
@@ -34,6 +34,7 @@ var webexCommandHandler = CommandHandler{
 		"start":      executeStart,
 		"room":       executeRoom,
 		"room-reset": executeRoomReset,
+		"reset-room": executeRoomReset,
 	},
 	defaultHandler: executeStartWithArg,
 }
