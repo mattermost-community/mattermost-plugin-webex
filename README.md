@@ -1,6 +1,8 @@
-# Mattermost Webex Cloud Plugin ![CircleCI branch](https://img.shields.io/circleci/project/github/mattermost/mattermost-plugin-webex/master.svg)
+# Mattermost Webex Cloud Plugin 
+![CircleCI branch](https://img.shields.io/circleci/project/github/mattermost/mattermost-plugin-webex/master.svg)
 
-Mattermost Webex Cloud Plugin
+**Maintainer:** [@cpoile](https://github.com/cpoile)
+**Co-Maintainer:** [@mickmister](https://github.com/mickmister)
 
 Start and join voice calls, video calls and use screen sharing with your team members via Cisco Webex Meetings.
 
