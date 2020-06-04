@@ -1,5 +1,8 @@
 # Mattermost Webex Cloud Plugin 
-![CircleCI branch](https://img.shields.io/circleci/project/github/mattermost/mattermost-plugin-webex/master.svg)
+[![Build Status](https://img.shields.io/circleci/project/github/mattermost/mattermost-plugin-webex/master)](https://circleci.com/gh/mattermost/mattermost-plugin-webex)
+[![Code Coverage](https://img.shields.io/codecov/c/github/mattermost/mattermost-plugin-webex/master)](https://codecov.io/gh/mattermost/mattermost-plugin-webex)
+[![Release](https://img.shields.io/github/v/release/mattermost/mattermost-plugin-webex)](https://github.com/mattermost/mattermost-plugin-webex/releases/latest)
+[![HW](https://img.shields.io/github/issues/mattermost/mattermost-plugin-webex/Up%20For%20Grabs?color=dark%20green&label=Help%20Wanted)](https://github.com/mattermost/mattermost-plugin-webex/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc+label%3A%22Up+For+Grabs%22+label%3A%22Help+Wanted%22)
 
 **Maintainer:** [@cpoile](https://github.com/cpoile)
 **Co-Maintainer:** [@mickmister](https://github.com/mickmister)
