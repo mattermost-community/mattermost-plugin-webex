@@ -7,7 +7,7 @@
 **Maintainer:** [@cpoile](https://github.com/cpoile)
 **Co-Maintainer:** [@mickmister](https://github.com/mickmister)
 
-Start and join voice calls, video calls and use screen sharing with your team members via Cisco Webex Meetings.
+Start and join voice calls, video calls and use screen sharing with your team members via Cisco Webex Meetings. (We do not support Cisco Webex Teams)
 
 Once enabled, clicking a meeting icon in a Mattermost channel invites team members to join a Webex meeting, hosted using the credentials of the user who initiated the meeting.
 
