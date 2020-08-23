@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/mattermost/mattermost-plugin-webex/server/webex"
+
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"
-	"strings"
 )
 
 const helpText = "###### Mattermost Webex Plugin - Slash Command Help\n" +
@@ -96,23 +98,17 @@ func (p *Plugin) responsef(commandArgs *model.CommandArgs, format string, args .
 	return &model.CommandResponse{}
 }
 
-func (p *Plugin) responseRedirect(redirectURL string) *model.CommandResponse {
-	return &model.CommandResponse{
-		GotoLocation: redirectURL,
-	}
-}
-
 func executeRoom(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
-	roomId, err := p.getRoomOrDefault(header.UserId)
+	roomID, err := p.getRoomOrDefault(header.UserId)
 	if err != nil {
 		return p.responsef(header, err.Error())
 	}
-	if roomId == "" {
-		roomId = defaultRoomText
+	if roomID == "" {
+		roomID = defaultRoomText
 	}
 
 	if len(args) != 1 {
-		return p.responsef(header, "Please enter one new room id. Current room id is: `%s`", roomId)
+		return p.responsef(header, "Please enter one new room id. Current room id is: `%s`", roomID)
 	}
 
 	userInfo, _ := p.store.LoadUserInfo(header.UserId)
@@ -139,23 +135,23 @@ func executeRoomReset(p *Plugin, c *plugin.Context, header *model.CommandArgs, a
 }
 
 func executeInfo(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
-	roomId, err := p.getRoom(header.UserId)
+	roomID, err := p.getRoom(header.UserId)
 	if err != nil && err != ErrUserNotFound {
 		fmt.Printf("<><> err: %+v type: %T", err, err)
 		return p.responsef(header, err.Error())
 	}
-	if roomId == "" {
-		roomId = defaultRoomText
+	if roomID == "" {
+		roomID = defaultRoomText
 	}
 
-	return p.responsef(header, "Webex site hostname: `%s`\nYour personal meeting room: `%s`", p.getConfiguration().SiteHost, roomId)
+	return p.responsef(header, "Webex site hostname: `%s`\nYour personal meeting room: `%s`", p.getConfiguration().SiteHost, roomID)
 }
 
 func executeStart(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
 	details := meetingDetails{
-		startedByUserId:     header.UserId,
-		meetingRoomOfUserId: header.UserId,
-		channelId:           header.ChannelId,
+		startedByUserID:     header.UserId,
+		meetingRoomOfUserID: header.UserId,
+		channelID:           header.ChannelId,
 		meetingStatus:       webex.StatusStarted,
 	}
 	if _, _, err := p.startMeeting(details); err != nil {
@@ -171,8 +167,8 @@ func executeStartWithArg(p *Plugin, c *plugin.Context, header *model.CommandArgs
 	}
 
 	details := meetingDetails{
-		startedByUserId: header.UserId,
-		channelId:       header.ChannelId,
+		startedByUserID: header.UserId,
+		channelID:       header.ChannelId,
 		meetingStatus:   webex.StatusInvited,
 	}
 
@@ -183,21 +179,21 @@ func executeStartWithArg(p *Plugin, c *plugin.Context, header *model.CommandArgs
 		if appErr != nil {
 			return p.responsef(header, "Could not find the user `%s`. Please make sure you typed the name correctly and try again.", arg)
 		}
-		details.meetingRoomOfUserId = user.Id
+		details.meetingRoomOfUserID = user.Id
 		if _, _, err := p.startMeeting(details); err != nil {
-			return p.responsef(header, "Unable to create a meeting at `%s` for user: `%s`. They may not have their roomId set correctly, or their Mattermost email is not the same as their Webex email.", p.getConfiguration().SiteHost, arg)
+			return p.responsef(header, "Unable to create a meeting at `%s` for user: `%s`. They may not have their roomID set correctly, or their Mattermost email is not the same as their Webex email.", p.getConfiguration().SiteHost, arg)
 		}
 		return &model.CommandResponse{}
 	}
 
-	// we were given a roomId
-	roomUrl, err := p.getUrlFromRoomId(arg)
+	// we were given a roomID
+	roomURL, err := p.getURLFromRoomID(arg)
 	if err != nil {
 		return p.responsef(header, "No Personal Room link found at `%s` for the room: `%s`", p.getConfiguration().SiteHost, arg)
 	}
 
-	details.roomUrl = roomUrl
-	_, _, err = p.startMeetingFromRoomUrl(details)
+	details.roomURL = roomURL
+	_, _, err = p.startMeetingFromRoomURL(details)
 	if err != nil {
 		p.errorf("executeStartWithArg - Error creating the invitation posts, err: %v", err)
 		return p.responsef(header, "Failed to make the invitation post. Please contact your system administrator.")

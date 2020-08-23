@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -21,7 +20,7 @@ const (
 )
 
 type Client interface {
-	GetPersonalMeetingRoomUrl(roomId, username, email string) (string, error)
+	GetPersonalMeetingRoomURL(roomID, username, email string) (string, error)
 }
 
 // Client represents a Webex API client
@@ -46,24 +45,24 @@ func NewClient(siteHost, siteName string) Client {
 	}
 }
 
-// GetPersonalMeetingRoomUrl prefers roomId, username, and email for finding the PMR url (in that order).
-func (c *client) GetPersonalMeetingRoomUrl(roomId, username, email string) (string, error) {
-	if roomId != "" {
-		pmrUrl, err := c.getPMRFromRoomId(roomId)
-		if err == nil && pmrUrl != "" {
-			return pmrUrl, nil
+// GetPersonalMeetingRoomURL prefers roomID, username, and email for finding the PMR url (in that order).
+func (c *client) GetPersonalMeetingRoomURL(roomID, username, email string) (string, error) {
+	if roomID != "" {
+		pmrURL, err := c.getPMRFromRoomID(roomID)
+		if err == nil && pmrURL != "" {
+			return pmrURL, nil
 		}
 	}
 	if username != "" {
-		pmrUrl, err := c.getPMRFromUserName(username)
-		if err == nil && pmrUrl != "" {
-			return pmrUrl, nil
+		pmrURL, err := c.getPMRFromUserName(username)
+		if err == nil && pmrURL != "" {
+			return pmrURL, nil
 		}
 	}
 	if email != "" {
-		pmrUrl, err := c.getPMRFromEmail(email)
-		if err == nil && pmrUrl != "" {
-			return pmrUrl, nil
+		pmrURL, err := c.getPMRFromEmail(email)
+		if err == nil && pmrURL != "" {
+			return pmrURL, nil
 		}
 	}
 
@@ -84,23 +83,23 @@ const payloadWrapper = `<?xml version="1.0" encoding="UTF-8"?>
     </body>
 </serv:message>`
 
-const roomIdContent = `<personalUrl>%s</personalUrl>`
-const webexIdContent = `<webExId>%s</webExId>`
+const roomIDContent = `<personalUrl>%s</personalUrl>`
+const webexIDContent = `<webExId>%s</webExId>`
 const emailContent = `<email>%s</email>`
 
-// getPMRFromRoomId gets a Personal Meeting Room using a roomId, or returns an error if not found
-func (c *client) getPMRFromRoomId(roomId string) (string, error) {
-	content := fmt.Sprintf(roomIdContent, roomId)
+// getPMRFromRoomID gets a Personal Meeting Room using a roomID, or returns an error if not found
+func (c *client) getPMRFromRoomID(roomID string) (string, error) {
+	content := fmt.Sprintf(roomIDContent, roomID)
 	return c.getPMR(content)
 }
 
-// getPMRFromRoomId gets a Personal Meeting Room using a userName, or returns an error if not found
+// getPMRFromroomID gets a Personal Meeting Room using a userName, or returns an error if not found
 func (c *client) getPMRFromUserName(userName string) (string, error) {
-	content := fmt.Sprintf(webexIdContent, userName)
+	content := fmt.Sprintf(webexIDContent, userName)
 	return c.getPMR(content)
 }
 
-// getPMRFromRoomId gets a Personal Meeting Room using an email, or returns an error if not found
+// getPMRFromroomID gets a Personal Meeting Room using an email, or returns an error if not found
 func (c *client) getPMRFromEmail(email string) (string, error) {
 	content := fmt.Sprintf(emailContent, email)
 	return c.getPMR(content)
@@ -139,10 +138,10 @@ func (c *client) roundTrip(payload string) (*bytes.Buffer, error) {
 		return nil, errors.Errorf("received nil response when making request to %v", c.xmlURL)
 	}
 
-	defer closeBody(rp)
+	defer rp.Body.Close()
 
 	if rp.StatusCode >= 300 {
-		return nil, errors.New("Received status code above 300")
+		return nil, errors.New("received status code above 300")
 	}
 
 	buf := new(bytes.Buffer)
@@ -154,20 +153,19 @@ func (c *client) roundTrip(payload string) (*bytes.Buffer, error) {
 	return buf, nil
 }
 
-func closeBody(r *http.Response) {
-	if r.Body != nil {
-		ioutil.ReadAll(r.Body)
-		r.Body.Close()
-	}
-}
+// func closeBody(r *http.Response) {
+// 	if r.Body != nil {
+// 		r.Body.Close()
+// 	}
+// }
 
 // For testing
 type MockClient struct {
 	SiteHost string
 }
 
-func (mc MockClient) GetPersonalMeetingRoomUrl(roomId, username, email string) (string, error) {
-	room := roomId
+func (mc MockClient) GetPersonalMeetingRoomURL(roomID, username, email string) (string, error) {
+	room := roomID
 	if room == "" {
 		room = username
 	}

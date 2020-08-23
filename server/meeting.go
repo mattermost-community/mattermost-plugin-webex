@@ -2,18 +2,20 @@ package main
 
 import (
 	"fmt"
-	"github.com/mattermost/mattermost-plugin-webex/server/webex"
-	"github.com/mattermost/mattermost-server/v5/model"
 	"net/http"
 	"strings"
+
+	"github.com/mattermost/mattermost-plugin-webex/server/webex"
+
+	"github.com/mattermost/mattermost-server/v5/model"
 )
 
 type meetingDetails struct {
-	startedByUserId     string
-	meetingRoomOfUserId string
-	channelId           string
+	startedByUserID     string
+	meetingRoomOfUserID string
+	channelID           string
 	meetingStatus       string
-	roomUrl             string
+	roomURL             string
 }
 
 type meetingPosts struct {
@@ -24,30 +26,30 @@ type meetingPosts struct {
 // startMeeting starts a meeting using details.meetingRoomOfUserId's room
 // returns the joinPost, startPost, http status code and a descriptive error
 func (p *Plugin) startMeeting(details meetingDetails) (*meetingPosts, int, error) {
-	roomUrl, err := p.getRoomUrlFromMMId(details.meetingRoomOfUserId)
+	roomURL, err := p.getRoomURLFromMMId(details.meetingRoomOfUserID)
 	if err != nil {
 		return nil, http.StatusBadRequest, err
 	}
 
-	details.roomUrl = roomUrl
-	return p.startMeetingFromRoomUrl(details)
+	details.roomURL = roomURL
+	return p.startMeetingFromRoomURL(details)
 }
 
-// startMeetingFromRoomUrl starts a meeting using details.roomUrl, ignoring details.meetingRoomOfUserId
-func (p *Plugin) startMeetingFromRoomUrl(details meetingDetails) (*meetingPosts, int, error) {
-	webexJoinURL := p.makeJoinUrl(details.roomUrl)
-	webexStartURL := p.makeStartUrl(details.roomUrl)
+// startMeetingFromroomURL starts a meeting using details.roomURL, ignoring details.meetingRoomOfUserId
+func (p *Plugin) startMeetingFromRoomURL(details meetingDetails) (*meetingPosts, int, error) {
+	webexJoinURL := p.makeJoinURL(details.roomURL)
+	webexStartURL := p.makeStartURL(details.roomURL)
 
 	joinPost := &model.Post{
 		UserId:    p.botUserID,
-		ChannelId: details.channelId,
+		ChannelId: details.channelID,
 		Message:   fmt.Sprintf("Meeting started at %s.", webexJoinURL),
 		Type:      "custom_webex",
 		Props: map[string]interface{}{
 			"meeting_link":     webexJoinURL,
 			"meeting_status":   details.meetingStatus,
 			"meeting_topic":    "Webex Meeting",
-			"starting_user_id": details.startedByUserId,
+			"starting_user_id": details.startedByUserID,
 		},
 	}
 
@@ -58,64 +60,64 @@ func (p *Plugin) startMeetingFromRoomUrl(details meetingDetails) (*meetingPosts,
 
 	startPost := &model.Post{
 		UserId:    p.botUserID,
-		ChannelId: details.channelId,
+		ChannelId: details.channelID,
 		Message:   fmt.Sprintf("To start the meeting, click here: %s.", webexStartURL),
 	}
 
 	var createdStartPost *model.Post
 	if details.meetingStatus == webex.StatusStarted {
-		createdStartPost = p.API.SendEphemeralPost(details.startedByUserId, startPost)
+		createdStartPost = p.API.SendEphemeralPost(details.startedByUserID, startPost)
 	}
 
 	return &meetingPosts{createdJoinPost, createdStartPost}, http.StatusOK, nil
 }
 
-func (p *Plugin) makeJoinUrl(meetingUrl string) string {
-	return strings.Replace(meetingUrl, "webex.com/meet/", "webex.com/join/", 1)
+func (p *Plugin) makeJoinURL(meetingURL string) string {
+	return strings.Replace(meetingURL, "webex.com/meet/", "webex.com/join/", 1)
 }
 
-func (p *Plugin) makeStartUrl(meetingUrl string) string {
-	return strings.Replace(meetingUrl, "webex.com/meet/", "webex.com/start/", 1)
+func (p *Plugin) makeStartURL(meetingURL string) string {
+	return strings.Replace(meetingURL, "webex.com/meet/", "webex.com/start/", 1)
 }
 
-func (p *Plugin) getUrlFromRoomId(roomId string) (string, error) {
-	roomUrl, cerr := p.webexClient.GetPersonalMeetingRoomUrl(roomId, "", "")
+func (p *Plugin) getURLFromRoomID(roomID string) (string, error) {
+	roomURL, cerr := p.webexClient.GetPersonalMeetingRoomURL(roomID, "", "")
 	if cerr != nil {
 		return "", cerr
 	}
 
-	return roomUrl, nil
+	return roomURL, nil
 }
 
-func (p *Plugin) getUrlFromNameOrEmail(userName, email string) (string, error) {
-	roomUrl, err := p.webexClient.GetPersonalMeetingRoomUrl("", userName, email)
+func (p *Plugin) getURLFromNameOrEmail(userName, email string) (string, error) {
+	roomURL, err := p.webexClient.GetPersonalMeetingRoomURL("", userName, email)
 	if err != nil {
 		return "", err
 	}
 
-	return roomUrl, nil
+	return roomURL, nil
 }
 
-// getRoomUrlFromMMId will find the correct url for mattermostUserId, or return a message explaining why it couldn't.
-func (p *Plugin) getRoomUrlFromMMId(mattermostUserId string) (string, error) {
-	var roomUrl string
-	if roomId, err := p.getRoom(mattermostUserId); err == nil && roomId != "" {
+// getroomURLFromMMId will find the correct url for mattermostUserId, or return a message explaining why it couldn't.
+func (p *Plugin) getRoomURLFromMMId(mattermostUserID string) (string, error) {
+	var roomURL string
+	if roomID, err := p.getRoom(mattermostUserID); err == nil && roomID != "" {
 		// Look for their url using roomId
-		roomUrl, err = p.getUrlFromRoomId(roomId)
+		roomURL, err = p.getURLFromRoomID(roomID)
 		if err != nil {
-			return "", fmt.Errorf("No Personal Room link found at `%s` for the room: `%s`", p.getConfiguration().SiteHost, roomId)
+			return "", fmt.Errorf("no Personal Room link found at `%s` for the room: `%s`", p.getConfiguration().SiteHost, roomID)
 		}
 	} else {
 		// Look for their url using userName or email
-		email, userName, err := p.getEmailAndUserName(mattermostUserId)
+		email, userName, err := p.getEmailAndUserName(mattermostUserID)
 		if err != nil {
-			return "", fmt.Errorf("Error getting email and Username: %v", err)
+			return "", fmt.Errorf("error getting email and Username: %v", err)
 		}
-		roomUrl, err = p.getUrlFromNameOrEmail(userName, email)
+		roomURL, err = p.getURLFromNameOrEmail(userName, email)
 		if err != nil {
-			return "", fmt.Errorf("No Personal Room link found at `%s` for your Username: `%s`, or your email: `%s`. Try setting a room manually with `/webex room <room id>`.", p.getConfiguration().SiteHost, userName, email)
+			return "", fmt.Errorf("no Personal Room link found at `%s` for your Username: `%s`, or your email: `%s`. Try setting a room manually with `/webex room <room id>`", p.getConfiguration().SiteHost, userName, email)
 		}
 	}
 
-	return roomUrl, nil
+	return roomURL, nil
 }

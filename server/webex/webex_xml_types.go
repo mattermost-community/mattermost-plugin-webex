@@ -21,7 +21,7 @@ type GetPMRRBodyContent struct {
 
 type Avatar struct {
 	XMLName          xml.Name `xml:"avatar"`
-	Url              string   `xml:"url"`
+	URL              string   `xml:"url"`
 	LastModifiedTime int      `xml:"lastModifiedTime"`
 	IsUploaded       bool     `xml:"isUploaded"`
 }

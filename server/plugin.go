@@ -5,11 +5,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/mattermost/mattermost-plugin-webex/server/webex"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
 	"sync"
+
+	"github.com/mattermost/mattermost-plugin-webex/server/webex"
 
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"
@@ -17,8 +18,6 @@ import (
 )
 
 const (
-	postMeetingKey = "post_meeting_"
-
 	botUserName    = "webex"
 	botDisplayName = "Webex"
 	botDescription = "Created by the Webex plugin."
@@ -85,7 +84,7 @@ func (p *Plugin) OnActivate() error {
 }
 
 func (p *Plugin) GetPluginURLPath() string {
-	return "/plugins/" + manifest.Id
+	return "/plugins/" + manifest.ID
 }
 
 func (p *Plugin) GetPluginURL() string {
@@ -96,24 +95,6 @@ func (p *Plugin) GetSiteURL() string {
 	return *p.API.GetConfig().ServiceSettings.SiteURL
 }
 
-func (p *Plugin) debugf(f string, args ...interface{}) {
-	p.API.LogDebug(fmt.Sprintf(f, args...))
-}
-
-func (p *Plugin) infof(f string, args ...interface{}) {
-	p.API.LogInfo(fmt.Sprintf(f, args...))
-}
-
 func (p *Plugin) errorf(f string, args ...interface{}) {
 	p.API.LogError(fmt.Sprintf(f, args...))
-}
-
-func (p *Plugin) postEphemeralError(channelId, userId, msg string) {
-	post := &model.Post{
-		UserId:    p.botUserID,
-		ChannelId: channelId,
-		Message:   msg,
-	}
-
-	_ = p.API.SendEphemeralPost(userId, post)
 }

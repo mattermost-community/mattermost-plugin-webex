@@ -6,12 +6,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/mattermost/mattermost-plugin-webex/server/webex"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/mattermost/mattermost-plugin-webex/server/webex"
 
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"

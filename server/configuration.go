@@ -5,10 +5,11 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/mattermost/mattermost-plugin-webex/server/webex"
 	"reflect"
 	"regexp"
 	"strings"
+
+	"github.com/mattermost/mattermost-plugin-webex/server/webex"
 
 	"github.com/pkg/errors"
 )
@@ -95,13 +96,13 @@ func (p *Plugin) OnConfigurationChange() error {
 		return errors.Wrap(err, "failed to load plugin configuration")
 	}
 
-	host := parseHostFromUrl(configuration.SiteHost)
+	host := parseHostFromURL(configuration.SiteHost)
 	if host != configuration.SiteHost {
 		configuration.SiteHost = host
 
 		asMap := map[string]interface{}{}
-		asJson, _ := json.Marshal(configuration)
-		_ = json.Unmarshal(asJson, &asMap)
+		asJSON, _ := json.Marshal(configuration)
+		_ = json.Unmarshal(asJSON, &asMap)
 		_ = p.API.SavePluginConfig(asMap)
 	}
 
@@ -114,7 +115,7 @@ func (p *Plugin) OnConfigurationChange() error {
 	return nil
 }
 
-func parseHostFromUrl(url string) string {
+func parseHostFromURL(url string) string {
 	r := regexp.MustCompile("^https?://(.*?)(/|$)")
 	matches := r.FindStringSubmatch(url)
 	if matches != nil {
