@@ -153,12 +153,6 @@ func (c *client) roundTrip(payload string) (*bytes.Buffer, error) {
 	return buf, nil
 }
 
-// func closeBody(r *http.Response) {
-// 	if r.Body != nil {
-// 		r.Body.Close()
-// 	}
-// }
-
 // For testing
 type MockClient struct {
 	SiteHost string
