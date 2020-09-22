@@ -1,9 +1,10 @@
 package main
 
 import (
-	"crypto/md5"
+	"crypto/md5" //nolint:gosec // md5 is used for user-hash generation and not encryption
 	"encoding/json"
 	"fmt"
+
 	"github.com/pkg/errors"
 )
 
@@ -12,8 +13,8 @@ const (
 )
 
 type Store interface {
-	StoreUserInfo(mattermostUserId string, info UserInfo) error
-	LoadUserInfo(mattermostUserId string) (UserInfo, error)
+	StoreUserInfo(mattermostUserID string, info UserInfo) error
+	LoadUserInfo(mattermostUserID string) (UserInfo, error)
 }
 
 type store struct {
@@ -25,7 +26,7 @@ func NewStore(p *Plugin) Store {
 }
 
 func hashkey(prefix, key string) string {
-	h := md5.New()
+	h := md5.New() //nolint:gosec // md5 is used for user-hash generation and not encryption
 	_, _ = h.Write([]byte(key))
 	return fmt.Sprintf("%s%x", prefix, h.Sum(nil))
 }
@@ -63,36 +64,33 @@ func (store store) set(key string, v interface{}) error {
 	return nil
 }
 
-func (store store) StoreUserInfo(mattermostUserId string, info UserInfo) error {
+func (store store) StoreUserInfo(mattermostUserID string, info UserInfo) error {
 	// Set the email because we need a field in the userInfo that cannot be blank (in order to tell if a user was found)
-	email, _, err := store.plugin.getEmailAndUserName(mattermostUserId)
+	email, _, err := store.plugin.getEmailAndUserName(mattermostUserID)
 	if err != nil {
 		return err
 	}
 	info.Email = email
-	err = store.set(hashkey(prefixUserInfo, mattermostUserId), info)
+	err = store.set(hashkey(prefixUserInfo, mattermostUserID), info)
 	if err != nil {
-		return errors.WithMessage(err, fmt.Sprintf("failed to store UserInfo for: %s", mattermostUserId))
-
+		return errors.WithMessage(err, fmt.Sprintf("failed to store UserInfo for: %s", mattermostUserID))
 	}
 	return nil
 }
 
-func (store store) LoadUserInfo(mattermostUserId string) (UserInfo, error) {
+func (store store) LoadUserInfo(mattermostUserID string) (UserInfo, error) {
 	userInfo := UserInfo{}
-	err := store.get(hashkey(prefixUserInfo, mattermostUserId), &userInfo)
+	err := store.get(hashkey(prefixUserInfo, mattermostUserID), &userInfo)
 	if err != nil && err == ErrUserNotFound {
 		return UserInfo{}, err
 	}
 	if err != nil {
 		return UserInfo{}, errors.WithMessage(err,
-			fmt.Sprintf("failed to load userInfo for mattermostUserId: %s", mattermostUserId))
+			fmt.Sprintf("failed to load userInfo for mattermostUserId: %s", mattermostUserID))
 	}
 
 	if len(userInfo.Email) == 0 {
 		return UserInfo{}, ErrUserNotFound
 	}
-
 	return userInfo, nil
-
 }

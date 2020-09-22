@@ -7,10 +7,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/mattermost/mattermost-plugin-webex/server/webex"
-	"github.com/mattermost/mattermost-server/v5/plugin"
+	"io"
 	"net/http"
 	"strconv"
+	"strings"
+
+	"github.com/mattermost/mattermost-plugin-webex/server/webex"
+
+	"github.com/mattermost/mattermost-server/v5/plugin"
 )
 
 const (
@@ -38,12 +42,10 @@ func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Req
 		"RequestURI", r.RequestURI, "Method", r.Method, "query", r.URL.Query().Encode())
 }
 
-func handleHTTPRequest(p *Plugin, w http.ResponseWriter, r *http.Request) (int, error) {
-	switch r.URL.Path {
-	case routeAPImeetings:
+func handleHTTPRequest(p *Plugin, w io.Writer, r *http.Request) (int, error) {
+	if strings.EqualFold(r.URL.Path, routeAPImeetings) {
 		return p.handleStartMeeting(w, r)
 	}
-
 	return http.StatusNotFound, errors.New("not found")
 }
 
@@ -52,14 +54,14 @@ type startMeetingRequest struct {
 	MeetingID int    `json:"meeting_id"`
 }
 
-func (p *Plugin) handleStartMeeting(w http.ResponseWriter, r *http.Request) (int, error) {
+func (p *Plugin) handleStartMeeting(w io.Writer, r *http.Request) (int, error) {
 	if r.Method != http.MethodPost {
 		return http.StatusMethodNotAllowed,
 			errors.New("method " + r.Method + " is not allowed, must be POST")
 	}
 
-	userId := r.Header.Get("Mattermost-User-Id")
-	if userId == "" {
+	userID := r.Header.Get("Mattermost-User-Id")
+	if userID == "" {
 		return http.StatusUnauthorized, errors.New("not authorized")
 	}
 
@@ -72,18 +74,18 @@ func (p *Plugin) handleStartMeeting(w http.ResponseWriter, r *http.Request) (int
 		return http.StatusBadRequest, errors.New("channel id required")
 	}
 
-	if _, appErr := p.API.GetChannelMember(req.ChannelID, userId); appErr != nil {
+	if _, appErr := p.API.GetChannelMember(req.ChannelID, userID); appErr != nil {
 		return http.StatusForbidden, errors.New("forbidden")
 	}
 
 	if !p.getConfiguration().IsValid() {
-		return http.StatusInternalServerError, errors.New("Unable to setup a meeting; the Webex plugin has not been configured correctly. Please speak with your Mattermost administrator.")
+		return http.StatusInternalServerError, errors.New("unable to setup a meeting; the Webex plugin has not been configured correctly. Please speak with your Mattermost administrator")
 	}
 
 	details := meetingDetails{
-		startedByUserId:     userId,
-		meetingRoomOfUserId: userId,
-		channelId:           req.ChannelID,
+		startedByUserID:     userID,
+		meetingRoomOfUserID: userID,
+		channelID:           req.ChannelID,
 		meetingStatus:       webex.StatusStarted,
 	}
 
