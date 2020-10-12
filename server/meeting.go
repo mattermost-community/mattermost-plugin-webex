@@ -41,7 +41,7 @@ func (p *Plugin) startMeetingFromRoomURL(details meetingDetails) (*meetingPosts,
 	webexStartURL := p.makeStartURL(details.roomURL)
 
 	joinPost := &model.Post{
-		UserId:    p.botUserID,
+		UserId:    details.startedByUserID,
 		ChannelId: details.channelID,
 		Message:   fmt.Sprintf("Meeting started at %s.", webexJoinURL),
 		Type:      "custom_webex",

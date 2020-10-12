@@ -210,7 +210,7 @@ func TestPlugin(t *testing.T) {
 
 			webexJoinURL := "https://" + tc.SiteHost + "/join/" + tc.Room
 			expectedJoinPost := &model.Post{
-				UserId:    p.botUserID,
+				UserId:    "theuserid",
 				ChannelId: "thechannelid",
 				Message:   fmt.Sprintf("Meeting started at %s.", webexJoinURL),
 				Type:      "custom_webex",
