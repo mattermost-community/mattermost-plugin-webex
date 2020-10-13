@@ -105,7 +105,7 @@ func getAutocompleteData() *model.AutocompleteData {
 	roomReset := model.NewAutocompleteData("room-reset", "", "Removes your room setting")
 	webexAutocomplete.AddCommand(roomReset)
 
-	join := model.NewAutocompleteData("join", "<room id>/<@username>", "Shares a link to a Webex meeting from a room id or a Mattermost username")
+	join := model.NewAutocompleteData("join", "<room id>/<@username>", "Shares a link to a Webex meeting in <room id> or in <@username>'s meeting room")
 	join.AddTextArgument("Webex room ID or Mattermost username", "<room id>/<@username>", "")
 	webexAutocomplete.AddCommand(join)
 
