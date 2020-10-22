@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pkg/errors"
-
 	"github.com/mattermost/mattermost-plugin-api/experimental/command"
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"
+	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost-plugin-webex/server/webex"
 )
@@ -40,6 +39,7 @@ var webexCommandHandler = CommandHandler{
 		"room":       executeRoom,
 		"room-reset": executeRoomReset,
 		"reset-room": executeRoomReset,
+		"join":       executeStartWithArg, // Used as an alias for /webex <@username>/<room id> to allow for Autocomplete suggestions
 	},
 	defaultHandler: executeStartWithArg,
 }
@@ -89,8 +89,35 @@ func (p *Plugin) getCommand() (*model.Command, error) {
 		AutoComplete:         true,
 		AutoCompleteDesc:     "Available commands: help, info, start, <room id/@username>, room, room-reset",
 		AutoCompleteHint:     "[command]",
+		AutocompleteData:     getAutocompleteData(),
 		AutocompleteIconData: iconData,
 	}, nil
+}
+
+func getAutocompleteData() *model.AutocompleteData {
+	webexAutocomplete := model.NewAutocompleteData("webex", "[command]", "Available commands: help, info, start, <room id/@username>, room, room-reset")
+
+	help := model.NewAutocompleteData("help", "", "Display usage information")
+	webexAutocomplete.AddCommand(help)
+
+	info := model.NewAutocompleteData("info", "", "Display your current settings")
+	webexAutocomplete.AddCommand(info)
+
+	start := model.NewAutocompleteData("start", "", "Start a Webex meeting in your room")
+	webexAutocomplete.AddCommand(start)
+
+	room := model.NewAutocompleteData("room", "<room id>", "Sets your personal Meeting Room ID")
+	room.AddTextArgument("Webex meeting room ID", "<room id>", "")
+	webexAutocomplete.AddCommand(room)
+
+	roomReset := model.NewAutocompleteData("room-reset", "", "Removes your room setting")
+	webexAutocomplete.AddCommand(roomReset)
+
+	join := model.NewAutocompleteData("join", "<room id>/<@username>", "Shares a link to a Webex meeting in <room id> or in <@username>'s meeting room")
+	join.AddTextArgument("Webex room ID or Mattermost username", "<room id>/<@username>", "")
+	webexAutocomplete.AddCommand(join)
+
+	return webexAutocomplete
 }
 
 func (p *Plugin) postCommandResponse(args *model.CommandArgs, text string) {
