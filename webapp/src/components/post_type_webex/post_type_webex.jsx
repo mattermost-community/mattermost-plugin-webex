@@ -41,6 +41,11 @@ export default class PostTypeWebex extends React.PureComponent {
          * Creator's name.
          */
         creatorName: PropTypes.string.isRequired,
+
+        /**
+         * Whether the post was sent from a bot. Used for backwards compatibility.
+         */
+        fromBot: PropTypes.bool.isRequired,
     };
 
     static defaultProps = {
@@ -62,9 +67,10 @@ export default class PostTypeWebex extends React.PureComponent {
 
         let content;
         let subtitle;
-        let preText = `${this.props.creatorName} has started a meeting`;
+        const subject = this.props.fromBot ? `${this.props.creatorName} has` : 'I have';
+        let preText = `${subject} started a meeting`;
         if (props.meeting_status === 'INVITED') {
-            preText = `${this.props.creatorName} has invited you to a meeting`;
+            preText = `${subject} invited you to a meeting`;
         }
         if (props.meeting_status === 'STARTED' || props.meeting_status === 'INVITED') {
             content = (
@@ -84,7 +90,7 @@ export default class PostTypeWebex extends React.PureComponent {
                 </a>
             );
         } else if (props.meeting_status === 'ENDED') {
-            preText = `${this.props.creatorName} has ended the meeting`;
+            preText = `${subject} ended the meeting`;
 
             if (props.meeting_personal) {
                 subtitle = 'Personal Meeting ID (PMI) : ' + props.meeting_id;

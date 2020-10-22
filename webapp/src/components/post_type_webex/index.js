@@ -16,6 +16,7 @@ function mapStateToProps(state, ownProps) {
 
     return {
         ...ownProps,
+        fromBot: ownProps.post.props.from_bot,
         creatorName: displayUsernameForUser(user, state),
         useMilitaryTime: getBool(state, 'display_settings', 'use_military_time', false),
     };
