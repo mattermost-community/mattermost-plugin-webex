@@ -75,7 +75,12 @@ func (p *Plugin) OnActivate() error {
 
 	p.webexClient = webex.NewClient(config.SiteHost, config.siteName)
 
-	err = p.API.RegisterCommand(getCommand())
+	command, err := p.getCommand()
+	if err != nil {
+		return errors.Wrap(err, "failed to get command")
+	}
+
+	err = p.API.RegisterCommand(command)
 	if err != nil {
 		return errors.WithMessage(err, "OnActivate: failed to register command")
 	}

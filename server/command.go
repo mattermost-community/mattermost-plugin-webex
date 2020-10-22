@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mattermost/mattermost-plugin-webex/server/webex"
-
+	"github.com/mattermost/mattermost-plugin-api/experimental/command"
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"
+	"github.com/pkg/errors"
+
+	"github.com/mattermost/mattermost-plugin-webex/server/webex"
 )
 
 const helpText = "###### Mattermost Webex Plugin - Slash Command Help\n" +
@@ -74,16 +76,22 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, commandArgs *model.CommandArg
 	return webexCommandHandler.Handle(p, c, commandArgs, args[1:]...), nil
 }
 
-func getCommand() *model.Command {
-	return &model.Command{
-		Trigger:          "webex",
-		DisplayName:      "Webex",
-		Description:      "Integration with Webex.",
-		AutoComplete:     true,
-		AutoCompleteDesc: "Available commands: help, info, start, <room id/@username>, room, room-reset",
-		AutoCompleteHint: "[command]",
-		AutocompleteData: getAutocompleteData(),
+func (p *Plugin) getCommand() (*model.Command, error) {
+	iconData, err := command.GetIconData(p.API, "assets/icon.svg")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get icon data")
 	}
+
+	return &model.Command{
+		Trigger:              "webex",
+		DisplayName:          "Webex",
+		Description:          "Integration with Webex.",
+		AutoComplete:         true,
+		AutoCompleteDesc:     "Available commands: help, info, start, <room id/@username>, room, room-reset",
+		AutoCompleteHint:     "[command]",
+		AutocompleteData:     getAutocompleteData(),
+		AutocompleteIconData: iconData,
+	}, nil
 }
 
 func getAutocompleteData() *model.AutocompleteData {
