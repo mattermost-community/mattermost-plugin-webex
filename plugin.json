@@ -4,28 +4,32 @@
     "description": "Webex audio and video conferencing plugin for Mattermost.",
     "homepage_url": "https://github.com/mattermost/mattermost-plugin-webex",
     "support_url": "https://github.com/mattermost/mattermost-plugin-webex/issues",
-    "release_notes_url": "https://github.com/mattermost/mattermost-plugin-webex/releases/tag/v1.0.1",
+    "release_notes_url": "https://github.com/mattermost/mattermost-plugin-webex/releases/tag/v1.1.0",
     "icon_path": "assets/icon.svg",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "min_server_version": "5.11.0",
     "server": {
         "executables": {
             "linux-amd64": "server/dist/plugin-linux-amd64",
             "darwin-amd64": "server/dist/plugin-darwin-amd64",
             "windows-amd64": "server/dist/plugin-windows-amd64.exe"
-        }
+        },
+        "executable": ""
     },
     "webapp": {
         "bundle_path": "webapp/dist/main.js"
     },
     "settings_schema": {
+        "header": "",
+        "footer": "",
         "settings": [
             {
                 "key": "SiteHost",
                 "display_name": "Webex Site Hostname",
                 "type": "text",
                 "help_text": "The hostname for your team's Webex site. For example: teamsite.webex.com",
-                "placeholder": "teamsite.webex.com"
+                "placeholder": "teamsite.webex.com",
+                "default": null
             }
         ]
     }
