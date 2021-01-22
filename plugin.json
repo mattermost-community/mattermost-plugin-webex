@@ -25,9 +25,9 @@
         "settings": [
             {
                 "key": "SiteHost",
-                "display_name": "Webex Site Hostname",
+                "display_name": "Webex Site Hostname:",
                 "type": "text",
-                "help_text": "The hostname for your team's Webex site. For example: teamsite.webex.com",
+                "help_text": "The hostname for your team's Webex site. For example: teamsite.webex.com.",
                 "placeholder": "teamsite.webex.com",
                 "default": null
             }
