@@ -1,7 +1,9 @@
 // Copyright (c) 2017-present Mattermost, Inc. All Rights Reserved.
 // See License for license information.
 
-import request from 'superagent';
+// import request from 'superagent';
+import {Client4} from 'mattermost-redux/client';
+import {ClientError} from 'mattermost-redux/client/client4';
 
 import {id} from '../manifest';
 
@@ -15,15 +17,26 @@ export default class Client {
     };
 
     doPost = async (url, body, headers = {}) => {
-        headers['X-Requested-With'] = 'XMLHttpRequest';
+        const options = {
+            method: 'post',
+            body: JSON.stringify(body),
+            headers,
+        };
 
-        const response = await request.
-            post(url).
-            send(body).
-            set(headers).
-            type('application/json').
-            accept('application/json');
+        options.headers['X-Requested-With'] = 'XMLHttpRequest';
 
-        return response.body;
+        const response = await fetch(url, Client4.getOptions(options));
+
+        if (response.ok) {
+            return response.json();
+        }
+
+        const text = await response.text();
+
+        throw new ClientError(Client4.url, {
+            message: text || '',
+            status_code: response.status,
+            url,
+        });
     }
 }
