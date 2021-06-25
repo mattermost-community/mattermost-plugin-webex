@@ -8,8 +8,8 @@ import {ClientError} from 'mattermost-redux/client/client4';
 import {id} from '../manifest';
 
 export default class Client {
-    setServerRoute(url) {
-        this.url = url + '/plugins/' + id;
+    constructor() {
+        this.url = '/plugins/' + id;
     }
 
     startMeeting = async (channelId, personal = true, topic = '', meetingId = 0) => {
