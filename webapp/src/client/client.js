@@ -1,7 +1,6 @@
 // Copyright (c) 2017-present Mattermost, Inc. All Rights Reserved.
 // See License for license information.
 
-// import request from 'superagent';
 import {Client4} from 'mattermost-redux/client';
 import {ClientError} from 'mattermost-redux/client/client4';
 
@@ -22,8 +21,6 @@ export default class Client {
             body: JSON.stringify(body),
             headers,
         };
-
-        options.headers['X-Requested-With'] = 'XMLHttpRequest';
 
         const response = await fetch(url, Client4.getOptions(options));
 
