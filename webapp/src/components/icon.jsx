@@ -9,7 +9,7 @@ export default class Icon extends React.PureComponent {
     render() {
         return (
             <span
-                className='d-flex align-items-center overflow--ellipsis'
+                className='d-flex align-items-center overflow--ellipsis icon'
                 aria-hidden='true'
                 dangerouslySetInnerHTML={{__html: Svgs.WEBEX_ICON}}
             />
