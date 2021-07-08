@@ -3,7 +3,7 @@
 
 import React from 'react';
 
-import { id as pluginId } from './manifest';
+import {id as pluginId} from './manifest';
 
 import Icon from './components/icon.jsx';
 import PostTypeWebex from './components/post_type_webex';
