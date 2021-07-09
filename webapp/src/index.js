@@ -4,6 +4,7 @@
 import React from 'react';
 
 import {id as pluginId} from './manifest';
+import {getConfig} from 'mattermost-redux/selectors/entities/general';
 
 import Icon from './components/icon.jsx';
 import PostTypeWebex from './components/post_type_webex';
