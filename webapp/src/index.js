@@ -4,7 +4,6 @@
 import React from 'react';
 
 import {getConfig} from 'mattermost-redux/selectors/entities/general';
-
 import {id as pluginId} from './manifest';
 
 import Icon from './components/icon.jsx';
