@@ -184,8 +184,9 @@ func TestPlugin(t *testing.T) {
 
 			p := Plugin{}
 			p.setConfiguration(&configuration{
-				SiteHost: tc.SiteHost,
-				siteName: parseSiteNameFromSiteHost(tc.SiteHost),
+				SiteHost:      tc.SiteHost,
+				siteName:      parseSiteNameFromSiteHost(tc.SiteHost),
+				URLConversion: true,
 			})
 			p.SetAPI(api)
 
