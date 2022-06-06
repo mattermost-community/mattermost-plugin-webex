@@ -15,13 +15,25 @@ import Client from './client';
 class Plugin {
     // eslint-disable-next-line no-unused-vars
     initialize(registry, store) {
-        registry.registerChannelHeaderButtonAction(
-            <Icon/>,
-            (channel) => {
-                startMeeting(channel.id)(store.dispatch, store.getState);
-            },
-            'Start Webex Meeting'
-        );
+        const helpText = 'Start Webex Meeting';
+        const action = (channel) => {
+            startMeeting(channel.id)(store.dispatch, store.getState);
+        };
+
+        // Channel header icon
+        registry.registerChannelHeaderButtonAction(<Icon/>, action, helpText);
+
+        // App Bar icon
+        if (registry.registerAppBarComponent) {
+            let siteUrl = '';
+            const config = getConfig(store.getState());
+            if (config) {
+                siteUrl = config.SiteURL;
+            }
+            const iconURL = `${siteUrl}/plugins/${pluginId}/public/app-bar-icon.png`;
+            registry.registerAppBarComponent(iconURL, action, helpText);
+        }
+
         registry.registerPostTypeComponent('custom_webex', PostTypeWebex);
         Client.setServerRoute(getServerRoute(store.getState()));
     }
