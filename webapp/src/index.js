@@ -25,11 +25,8 @@ class Plugin {
 
         // App Bar icon
         if (registry.registerAppBarComponent) {
-            let siteUrl = '';
             const config = getConfig(store.getState());
-            if (config) {
-                siteUrl = config.SiteURL;
-            }
+            const siteUrl = (config && config.SiteURL) || '';
             const iconURL = `${siteUrl}/plugins/${pluginId}/public/app-bar-icon.png`;
             registry.registerAppBarComponent(iconURL, action, helpText);
         }
