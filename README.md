@@ -8,8 +8,7 @@
 [![Release](https://img.shields.io/github/v/release/mattermost/mattermost-plugin-webex)](https://github.com/mattermost/mattermost-plugin-webex/releases/latest)
 [![HW](https://img.shields.io/github/issues/mattermost/mattermost-plugin-webex/Up%20For%20Grabs?color=dark%20green&label=Help%20Wanted)](https://github.com/mattermost/mattermost-plugin-webex/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc+label%3A%22Up+For+Grabs%22+label%3A%22Help+Wanted%22)
 
-**Maintainer:** [@cpoile](https://github.com/cpoile)
-**Co-Maintainer:** [@mickmister](https://github.com/mickmister)
+**Maintainer:** [@mickmister](https://github.com/mickmister)
 
 Start and join voice calls, video calls and use screen sharing with your team members via Cisco Webex Meetings. (We do not support Cisco Webex Teams)
 
