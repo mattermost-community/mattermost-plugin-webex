@@ -1,6 +1,6 @@
-# :warning: Disclaimer
+# Disclaimer
 
-**This repository is community supported and not maintained by Mattermost. Mattermost disclaims any and all liability for integrations, including Third Party Integrations and Mattermost Integrations. All integrations are provided "AS IS", and may be used at your own risk. Integrations may be modified or discontinued at any time.**
+**This repository is community supported and not maintained by Mattermost. Mattermost disclaims liability for integrations, including Third Party Integrations and Mattermost Integrations. Integrations may be modified or discontinued at any time.**
 
 # Mattermost Webex Cloud Plugin 
 [![Build Status](https://img.shields.io/circleci/project/github/mattermost/mattermost-plugin-webex/master)](https://circleci.com/gh/mattermost/mattermost-plugin-webex)
