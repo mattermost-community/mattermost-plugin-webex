@@ -14,7 +14,7 @@ import (
 
 	"github.com/mattermost/mattermost-plugin-webex/server/webex"
 
-	"github.com/mattermost/mattermost-server/v5/plugin"
+	"github.com/mattermost/mattermost/server/public/plugin"
 )
 
 const (

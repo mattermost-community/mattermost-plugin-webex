@@ -14,10 +14,10 @@ import (
 
 	"github.com/mattermost/mattermost-plugin-webex/server/webex"
 
-	"github.com/mattermost/mattermost-server/v5/model"
-	"github.com/mattermost/mattermost-server/v5/plugin"
-	"github.com/mattermost/mattermost-server/v5/plugin/plugintest"
-	"github.com/mattermost/mattermost-server/v5/plugin/plugintest/mock"
+	"github.com/mattermost/mattermost/server/public/model"
+	"github.com/mattermost/mattermost/server/public/plugin"
+	"github.com/mattermost/mattermost/server/public/plugin/plugintest"
+	"github.com/mattermost/mattermost/server/public/plugin/plugintest/mock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -172,9 +172,18 @@ func TestPlugin(t *testing.T) {
 				mock.AnythingOfTypeArgument("string"),
 				mock.AnythingOfTypeArgument("string"),
 				mock.AnythingOfTypeArgument("string")).Return(nil)
+			api.On("GetServerVersion").Return("5.10.0")
 
 			user, _ := json.Marshal(tc.User)
 			api.On("KVGet", mock.AnythingOfTypeArgument("string")).Return(user, (*model.AppError)(nil))
+			api.On("KVSetWithOptions", "mutex_mmi_bot_ensure", mock.AnythingOfType("[]uint8"), model.PluginKVSetOptions{Atomic: true, OldValue: []uint8(nil), ExpireInSeconds: 15}).Return(true, nil)
+			api.On("KVSetWithOptions", "mutex_mmi_bot_ensure", []byte(nil), model.PluginKVSetOptions{ExpireInSeconds: 0}).Return(true, nil)
+
+			api.On("EnsureBotUser", &model.Bot{
+				Username:    botUserName,
+				DisplayName: botDisplayName,
+				Description: botDescription,
+			}).Return(botUserID, nil)
 
 			api.On("CreatePost",
 				mock.AnythingOfType("*model.Post")).Return(&model.Post{}, nil)
@@ -189,10 +198,6 @@ func TestPlugin(t *testing.T) {
 				URLConversion: true,
 			})
 			p.SetAPI(api)
-
-			helpers := &plugintest.Helpers{}
-			helpers.On("EnsureBot", mock.AnythingOfType("*model.Bot")).Return(botUserID, nil)
-			p.SetHelpers(helpers)
 
 			err = p.OnActivate()
 			require.Nil(t, err)
