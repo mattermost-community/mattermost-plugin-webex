@@ -5,12 +5,14 @@ import React from 'react';
 
 import {getConfig} from 'mattermost-redux/selectors/entities/general';
 
-import {id as pluginId} from './manifest';
+import manifest from './manifest';
 
 import Icon from './components/icon.jsx';
 import PostTypeWebex from './components/post_type_webex';
 import {startMeeting} from './actions';
 import Client from './client';
+
+const {id: pluginId} = manifest;
 
 class Plugin {
     // eslint-disable-next-line no-unused-vars

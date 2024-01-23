@@ -92,7 +92,7 @@ func (p *Plugin) OnActivate() error {
 }
 
 func (p *Plugin) GetPluginURLPath() string {
-	return "/plugins/" + manifest.ID
+	return "/plugins/" + manifest.Id
 }
 
 func (p *Plugin) GetPluginURL() string {
