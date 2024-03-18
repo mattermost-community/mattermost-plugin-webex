@@ -54,7 +54,7 @@ func (ch CommandHandler) Handle(p *Plugin, c *plugin.Context, header *model.Comm
 	return ch.defaultHandler(p, c, header, args...)
 }
 
-func executeHelp(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
+func executeHelp(p *Plugin, _ *plugin.Context, header *model.CommandArgs, _ ...string) *model.CommandResponse {
 	return p.help(header)
 }
 
@@ -134,7 +134,7 @@ func (p *Plugin) responsef(commandArgs *model.CommandArgs, format string, args .
 	return &model.CommandResponse{}
 }
 
-func executeRoom(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
+func executeRoom(p *Plugin, _ *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
 	roomID, err := p.getRoomOrDefault(header.UserId)
 	if err != nil {
 		return p.responsef(header, err.Error())
@@ -158,7 +158,7 @@ func executeRoom(p *Plugin, c *plugin.Context, header *model.CommandArgs, args .
 	return p.responsef(header, "Room is set to: `%v`", userInfo.RoomID)
 }
 
-func executeRoomReset(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
+func executeRoomReset(p *Plugin, _ *plugin.Context, header *model.CommandArgs, _ ...string) *model.CommandResponse {
 	userInfo, _ := p.store.LoadUserInfo(header.UserId)
 	userInfo.RoomID = ""
 	err := p.store.StoreUserInfo(header.UserId, userInfo)
@@ -170,7 +170,7 @@ func executeRoomReset(p *Plugin, c *plugin.Context, header *model.CommandArgs, a
 	return p.responsef(header, "Room is set to: `%s`", defaultRoomText)
 }
 
-func executeInfo(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
+func executeInfo(p *Plugin, _ *plugin.Context, header *model.CommandArgs, _ ...string) *model.CommandResponse {
 	roomID, err := p.getRoom(header.UserId)
 	if err != nil && err != ErrUserNotFound {
 		fmt.Printf("<><> err: %+v type: %T", err, err)
@@ -183,7 +183,7 @@ func executeInfo(p *Plugin, c *plugin.Context, header *model.CommandArgs, args .
 	return p.responsef(header, "Webex site hostname: `%s`\nYour personal meeting room: `%s`", p.getConfiguration().SiteHost, roomID)
 }
 
-func executeStart(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
+func executeStart(p *Plugin, _ *plugin.Context, header *model.CommandArgs, _ ...string) *model.CommandResponse {
 	details := meetingDetails{
 		startedByUserID:     header.UserId,
 		meetingRoomOfUserID: header.UserId,
@@ -197,7 +197,7 @@ func executeStart(p *Plugin, c *plugin.Context, header *model.CommandArgs, args 
 }
 
 // executeStartWithArg looks for meeting urls given: room id, @username
-func executeStartWithArg(p *Plugin, c *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
+func executeStartWithArg(p *Plugin, _ *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
 	if len(args) != 1 {
 		return p.help(header)
 	}

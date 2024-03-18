@@ -21,7 +21,7 @@ const (
 	routeAPImeetings = "/api/v1/meetings"
 )
 
-func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Request) {
+func (p *Plugin) ServeHTTP(_ *plugin.Context, w http.ResponseWriter, r *http.Request) {
 	status, err := handleHTTPRequest(p, w, r)
 	if err != nil {
 		p.API.LogError("ERROR: ", "Status", strconv.Itoa(status),
