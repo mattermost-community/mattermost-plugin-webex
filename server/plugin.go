@@ -12,8 +12,9 @@ import (
 
 	"github.com/mattermost/mattermost-plugin-webex/server/webex"
 
-	"github.com/mattermost/mattermost-server/v5/model"
-	"github.com/mattermost/mattermost-server/v5/plugin"
+	"github.com/mattermost/mattermost/server/public/model"
+	"github.com/mattermost/mattermost/server/public/plugin"
+	"github.com/mattermost/mattermost/server/public/pluginapi"
 	"github.com/pkg/errors"
 )
 
@@ -25,6 +26,8 @@ const (
 
 type Plugin struct {
 	plugin.MattermostPlugin
+
+	client *pluginapi.Client
 
 	// botUserID of the created bot account.
 	botUserID string
@@ -46,8 +49,8 @@ type Plugin struct {
 // OnActivate checks if the configurations is valid and ensures the bot account exists
 func (p *Plugin) OnActivate() error {
 	config := p.getConfiguration()
-
-	botUserID, err := p.Helpers.EnsureBot(&model.Bot{
+	p.client = pluginapi.NewClient(p.API, p.Driver)
+	botUserID, err := p.client.Bot.EnsureBot(&model.Bot{
 		Username:    botUserName,
 		DisplayName: botDisplayName,
 		Description: botDescription,
@@ -89,7 +92,7 @@ func (p *Plugin) OnActivate() error {
 }
 
 func (p *Plugin) GetPluginURLPath() string {
-	return "/plugins/" + manifest.ID
+	return "/plugins/" + manifest.Id
 }
 
 func (p *Plugin) GetPluginURL() string {
