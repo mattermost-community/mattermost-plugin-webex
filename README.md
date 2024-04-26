@@ -19,14 +19,6 @@ Once enabled, clicking a meeting icon in a Mattermost channel invites team membe
 
 ## Installation
 
-System Administrators need to install the Webex plugin on the Mattermost server to make this functionality available to Mattermost end-users.
-
-### Plugin Installation via Marketplace
-In Mattermost version 5.16 and above, the easiest way to install a Mattermost plugin is by clicking on the "Settings" menu button above the channel list. Select "Plugin Marketplace", search for "Webex" and click "Install"
-
-### Manual Plugin Installation via Upload
-Alternatively, download one of the binary releases from the GitHub page for the webex plugin
-
 1. Go to Settings --> Plugins --> Upload Plugin. Select the file you downloaded, upload it to the server. In server 5.14+, plugins will automatically be distributed across an Enterprise cluster of Mattermost servers, prior to v5.14 you will need to deploy the plugin on each server manually.
 
 2. Go to settings --> Plugin Management and Enable the Webex Meeting Plugin
