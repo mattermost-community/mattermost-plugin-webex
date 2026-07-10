@@ -11,6 +11,7 @@ import Icon from './components/icon.jsx';
 import PostTypeWebex from './components/post_type_webex';
 import {startMeeting} from './actions';
 import Client from './client';
+import {getServerRoute} from './selectors';
 
 const {id: pluginId} = manifest;
 
@@ -39,18 +40,3 @@ class Plugin {
 }
 
 window.registerPlugin(pluginId, new Plugin());
-
-const getServerRoute = (state) => {
-    const config = getConfig(state);
-
-    let basePath = '';
-    if (config && config.SiteURL) {
-        basePath = new URL(config.SiteURL).pathname;
-
-        if (basePath && basePath[basePath.length - 1] === '/') {
-            basePath = basePath.substr(0, basePath.length - 1);
-        }
-    }
-
-    return basePath;
-};
