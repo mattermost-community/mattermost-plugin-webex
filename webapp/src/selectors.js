@@ -5,10 +5,14 @@ export const getServerRoute = (state) => {
 
     let basePath = '';
     if (config && config.SiteURL) {
-        basePath = new URL(config.SiteURL).pathname;
+        try {
+            basePath = new URL(config.SiteURL).pathname;
 
-        if (basePath && basePath[basePath.length - 1] === '/') {
-            basePath = basePath.substr(0, basePath.length - 1);
+            if (basePath && basePath[basePath.length - 1] === '/') {
+                basePath = basePath.substr(0, basePath.length - 1);
+            }
+        } catch (e) {
+            basePath = '';
         }
     }
 
