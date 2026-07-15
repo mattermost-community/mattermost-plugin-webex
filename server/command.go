@@ -137,7 +137,7 @@ func (p *Plugin) responsef(commandArgs *model.CommandArgs, format string, args .
 func executeRoom(p *Plugin, _ *plugin.Context, header *model.CommandArgs, args ...string) *model.CommandResponse {
 	roomID, err := p.getRoomOrDefault(header.UserId)
 	if err != nil {
-		return p.responsef(header, err.Error())
+		return p.responsef(header, "%s", err.Error())
 	}
 	if roomID == "" {
 		roomID = defaultRoomText
@@ -174,7 +174,7 @@ func executeInfo(p *Plugin, _ *plugin.Context, header *model.CommandArgs, _ ...s
 	roomID, err := p.getRoom(header.UserId)
 	if err != nil && err != ErrUserNotFound {
 		fmt.Printf("<><> err: %+v type: %T", err, err)
-		return p.responsef(header, err.Error())
+		return p.responsef(header, "%s", err.Error())
 	}
 	if roomID == "" {
 		roomID = defaultRoomText
@@ -191,7 +191,7 @@ func executeStart(p *Plugin, _ *plugin.Context, header *model.CommandArgs, _ ...
 		meetingStatus:       webex.StatusStarted,
 	}
 	if _, _, err := p.startMeeting(details); err != nil {
-		return p.responsef(header, err.Error())
+		return p.responsef(header, "%s", err.Error())
 	}
 	return &model.CommandResponse{}
 }

@@ -138,7 +138,7 @@ func (c *client) roundTrip(payload string) (*bytes.Buffer, error) {
 		return nil, errors.Errorf("received nil response when making request to %v", c.xmlURL)
 	}
 
-	defer rp.Body.Close()
+	defer func() { _ = rp.Body.Close() }()
 
 	if rp.StatusCode >= 300 {
 		return nil, errors.New("received status code above 300")

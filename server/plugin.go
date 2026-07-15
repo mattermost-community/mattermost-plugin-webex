@@ -65,7 +65,7 @@ func (p *Plugin) OnActivate() error {
 		return errors.Wrap(err, "couldn't get bundle path")
 	}
 
-	profileImage, err := os.ReadFile(filepath.Join(bundlePath, "assets", "profile.png"))
+	profileImage, err := os.ReadFile(filepath.Join(bundlePath, "assets", "profile.png")) //nolint:gosec // bundlePath is provided by the Mattermost plugin API, not user input.
 	if err != nil {
 		return errors.Wrap(err, "couldn't read profile image")
 	}

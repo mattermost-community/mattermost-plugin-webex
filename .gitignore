@@ -12,6 +12,7 @@ dist
 *.out
 
 # Build
+/bin
 /coverage.txt
 /plugin.exe
 /mattermost-zoom-plugin*.tar.gz
