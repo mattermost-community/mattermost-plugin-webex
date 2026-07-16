@@ -4,10 +4,6 @@
 
 /* eslint-disable max-nested-callbacks */
 
-jest.mock('@emotion/react', () => ({
-    jsx: (type, props) => ({type, props}),
-}));
-
 jest.mock('./components/icon.jsx', () => ({__esModule: true, default: () => null}));
 jest.mock('./components/post_type_webex', () => ({__esModule: true, default: () => null}));
 
