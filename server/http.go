@@ -94,7 +94,7 @@ func (p *Plugin) handleStartMeeting(w io.Writer, r *http.Request) (int, error) {
 		return status, err
 	}
 
-	if _, err := w.Write([]byte(fmt.Sprintf("%v", posts.createdJoinPost.Id))); err != nil {
+	if _, err := fmt.Fprintf(w, "%v", posts.createdJoinPost.Id); err != nil {
 		p.API.LogWarn("failed to write response", "error", err.Error())
 	}
 

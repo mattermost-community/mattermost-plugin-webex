@@ -2,7 +2,7 @@
 // See License for license information.
 
 import {Client4} from 'mattermost-redux/client';
-import {ClientError} from 'mattermost-redux/client/client4';
+import {ClientError} from '@mattermost/client';
 
 import manifest from '../manifest';
 
@@ -35,5 +35,5 @@ export default class Client {
             status_code: response.status,
             url,
         });
-    }
+    };
 }

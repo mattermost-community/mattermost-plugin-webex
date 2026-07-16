@@ -1,4 +1,4 @@
-{  
+{
   "compilerOptions": {
     "target": "esnext",
     "lib": [
@@ -19,7 +19,7 @@
     "isolatedModules": true,
     "noEmit": true,
     "experimentalDecorators": true,
-    "jsx": "react",
+    "jsx": "react-jsx",
     "baseUrl": "./",
     "types": ["jest", "node"]
   },
