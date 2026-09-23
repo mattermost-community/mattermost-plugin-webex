@@ -15,7 +15,7 @@ let mode = 'production';
 let devtool = 'source-map';
 if (NPM_TARGET === 'debug' || NPM_TARGET === 'debug:watch') {
     mode = 'development';
-    devtool = 'eval-cheap-module-source-map';
+    devtool = 'inline-cheap-module-source-map';
 }
 
 const plugins = [
