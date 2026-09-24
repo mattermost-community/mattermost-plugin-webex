@@ -15,7 +15,7 @@ let mode = 'production';
 let devtool = 'source-map';
 if (NPM_TARGET === 'debug' || NPM_TARGET === 'debug:watch') {
     mode = 'development';
-    devtool = 'eval-cheap-module-source-map';
+    devtool = 'inline-cheap-module-source-map';
 }
 
 const plugins = [
@@ -74,6 +74,9 @@ module.exports = {
     externals: {
         react: 'React',
         'react-dom': 'ReactDOM',
+        'react-dom/client': 'ReactDOM',
+        'react/jsx-runtime': 'ReactJSXRuntime',
+        'react/jsx-dev-runtime': 'ReactJSXDevRuntime',
         redux: 'Redux',
         'react-redux': 'ReactRedux',
         'prop-types': 'PropTypes',
